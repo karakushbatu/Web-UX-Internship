@@ -35,19 +35,11 @@ It helps identify **scroll behavior**, **click zones**, and **user engagement pa
 
 Simply include the `ux-radar.js` script in any web page you want to track.
 
-html
-
-KopyalaDüzenle
-
 `<script src="ux-radar.js"></script>`
 
 Interaction logs (scroll and click) will appear in the browser's developer console.
 
 Example output:
-
-csharp
-
-KopyalaDüzenle
 
 `[UXRadar] Scroll: 63% [UXRadar] Clicked → <BUTTON>.id=ctaBtn .class=cta-button`
 
