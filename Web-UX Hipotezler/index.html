@@ -1,1 +1,377 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teknosa - Hipotez Çalışmaları: A/B Test Paneli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa; /* Light gray background for a clean look */
+            color: #343a40;
+        }
+        .nav-item.active {
+            background-color: #f48220; /* Teknosa Orange */
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .nav-item.active:hover {
+            background-color: #e9710f; /* Darker orange on hover for active item */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        /* Fade-in animation for content */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-1/4 max-w-xs bg-white p-5 sticky top-0 h-screen overflow-y-auto border-r border-gray-200 flex flex-col">
+            <!-- Header -->
+            <div class="mb-6">
+                <img src="https://i.imgur.com/IEfbJTg.png" alt="Teknosa Logosu" class="h-8 w-auto mb-4">
+                <h1 class="text-xl font-bold text-gray-800">Hipotez Çalışmaları</h1>
+                <p class="text-sm text-gray-500">Web/UX Departmanı</p>
+            </div>
+            
+            <hr class="mb-4">
+
+            <!-- Navigation -->
+            <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Hipotezler</h2>
+            <nav id="navigation" class="space-y-2 flex-grow">
+                <!-- Navigation items will be injected by JS -->
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content" class="w-3/4 p-6 md:p-10 overflow-y-auto">
+            <!-- Content sections will be injected by JS -->
+        </main>
+    </div>
+
+    <script>
+        const hypothesesData = [
+            {
+                id: 1,
+                title: "“Stokta Az Kaldı” Uyarısı",
+                icon: "⏳", // Icon updated
+                goal: "Kullanıcılarda kıtlık algısı oluşturarak satın alma kararını hızlandırmak.",
+                h0: '"Stokta son 3 ürün" gibi uyarılar, kullanıcı davranışını etkilemez.',
+                h1: 'Bu uyarılar ürün detay tıklama ve sepete ekleme oranlarını artırır.',
+                metrics: ['Ürün detay sayfasına tıklanma oranı', 'Sepete ekleme oranı', 'Sayfada kalma süresi'],
+                test: {
+                    groupA: { name: 'Grup A (Kontrol)', desc: 'Standart ürün kartı', mockup: '<div class="border rounded-lg p-4 bg-white shadow-sm"><div class="w-full h-32 bg-gray-200 rounded"></div><h3 class="font-bold mt-2">Ürün Adı</h3><p class="text-gray-600">199.99 TL</p></div>' },
+                    groupB: { name: 'Grup B (Test)', desc: '"Son 3 ürün!" etiketi', mockup: '<div class="border rounded-lg p-4 bg-white shadow-sm relative"><div class="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">Son 3 Ürün!</div><div class="w-full h-32 bg-gray-200 rounded"></div><h3 class="font-bold mt-2">Ürün Adı</h3><p class="text-gray-600">199.99 TL</p></div>' },
+                },
+                chartData: {
+                    labels: ['Grup A', 'Grup B'],
+                    metric: 'Sepete Ekleme Oranı (%)',
+                    data: [5.2, 7.8]
+                }
+            },
+            {
+                id: 2,
+                title: "“Ücretsiz Kargo” Etiketi",
+                icon: "🚚",
+                goal: "Alışveriş kararını tetikleyen faktörlerden biri olan kargo bilgisinin vurgulanmasının etkisini ölçmek.",
+                h0: 'Ücretsiz kargo bilgisi gösterilse de kullanıcı davranışını etkilemez.',
+                h1: 'Ücretsiz kargo bilgisi gösterildiğinde tıklanma ve sepet oranları artar.',
+                metrics: ['Ürün kartı tıklanma oranı', 'Sepete ekleme oranı', 'Hemen çıkma (bounce) oranı'],
+                test: {
+                    groupA: { name: 'Grup A (Kontrol)', desc: 'Standart fiyat görünümü', mockup: '<div class="border rounded-lg p-4 bg-white shadow-sm"><div class="w-full h-32 bg-gray-200 rounded"></div><h3 class="font-bold mt-2">Ürün Adı</h3><p class="text-gray-600 text-lg font-semibold">249.99 TL</p></div>' },
+                    groupB: { name: 'Grup B (Test)', desc: '“Ücretsiz Kargo” badge', mockup: '<div class="border rounded-lg p-4 bg-white shadow-sm"><div class="w-full h-32 bg-gray-200 rounded"></div><h3 class="font-bold mt-2">Ürün Adı</h3><p class="text-gray-600 text-lg font-semibold">249.99 TL</p><p class="text-green-600 font-semibold text-sm mt-1">✓ Ücretsiz Kargo</p></div>' },
+                },
+                chartData: {
+                    labels: ['Grup A', 'Grup B'],
+                    metric: 'Ürün Kartı Tıklanma Oranı (%)',
+                    data: [12.5, 15.1]
+                }
+            },
+            {
+                id: 3,
+                title: "Mobilde Sabit Filtre Butonu",
+                icon: "📱",
+                goal: "Mobil cihazlarda ürün listeleme sayfalarında filtreye erişimi kolaylaştırarak kullanıcı etkileşimini artırmak.",
+                h0: 'Mobilde filtre butonunun sabit (sticky) hale getirilmesi kullanıcı davranışını değiştirmez.',
+                h1: 'Sticky filtre butonu, filtre kullanımını ve ürün etkileşimini artırır.',
+                metrics: ['Filtre butonuna tıklanma oranı', 'Filtre sonrası ürün detay sayfasına geçiş', 'Sayfada geçirilen süre', 'Mobil bounce rate'],
+                test: {
+                    groupA: { name: 'Grup A (Kontrol)', desc: 'Klasik (sayfanın en üstünde)', mockup: '<div class="border-2 border-gray-800 rounded-2xl w-48 h-80 bg-white p-2 shadow-lg"><div class="bg-gray-100 p-2 rounded-t-lg font-semibold">Ürünler</div><div class="p-2 text-sm">Filtrele ☰</div><div class="h-full bg-gray-50 overflow-y-scroll"></div></div>' },
+                    groupB: { name: 'Grup B (Test)', desc: 'Sticky (sabit, ekranın altında)', mockup: '<div class="border-2 border-gray-800 rounded-2xl w-48 h-80 bg-white p-2 shadow-lg flex flex-col"><div class="bg-gray-100 p-2 rounded-t-lg font-semibold">Ürünler</div><div class="flex-grow bg-gray-50"></div><div class="bg-blue-600 text-white text-center p-2 rounded-lg mt-2 font-semibold">Filtrele ☰</div></div>' },
+                },
+                chartData: {
+                    labels: ['Grup A', 'Grup B'],
+                    metric: 'Filtre Kullanım Oranı (%)',
+                    data: [8.0, 14.5]
+                }
+            },
+            {
+                id: 4,
+                title: "“Yorumlarda Ara” Özelliği",
+                icon: "💬",
+                goal: "Kullanıcıların ürün yorumları içinde aradıkları bilgiye daha hızlı ulaşmalarını sağlayarak satın alma kararını desteklemek.",
+                h0: 'Yorum arama özelliği mobilde kullanıcı davranışını etkilemez.',
+                h1: 'Yorumlarda “kamera”, “şarj” gibi anahtar kelime arama özelliği kullanıcıyı ürüne daha çok bağlar ve sepete ekleme artar.',
+                metrics: ['Yorum arama özelliğine tıklanma oranı', 'Arama sonrası yorumlarda geçirilen süre', 'Sepete ekleme oranı'],
+                test: {
+                    groupA: { name: 'Grup A (Kontrol)', desc: 'Yorumlar arasında manuel gezinme', mockup: '<div class="border rounded-lg p-4 bg-white shadow-sm"><h4 class="font-bold">Yorumlar (125)</h4><div class="mt-2 space-y-2"><div class="bg-gray-100 p-2 rounded">Harika ürün...</div><div class="bg-gray-100 p-2 rounded">Beğenmedim...</div></div></div>' },
+                    groupB: { name: 'Grup B (Test)', desc: 'Yorumlar bölümünde arama çubuğu', mockup: '<div class="border rounded-lg p-4 bg-white shadow-sm"><h4 class="font-bold">Yorumlar (125)</h4><input type="text" placeholder="Yorumlarda ara... (örn: kamera)" class="w-full border rounded p-2 mt-2"/><div class="mt-2 space-y-2"><div class="bg-gray-100 p-2 rounded">Harika ürün...</div><div class="bg-gray-100 p-2 rounded">Beğenmedim...</div></div></div>' },
+                },
+                chartData: {
+                    labels: ['Grup A', 'Grup B'],
+                    metric: 'Sepete Ekleme Oranı (%)',
+                    data: [4.1, 5.3]
+                }
+            },
+            {
+                id: 5,
+                title: "“Hemen Satın Al” Butonu",
+                icon: "🛒",
+                goal: "Satın alma hunisini kısaltarak, özellikle mobil kullanıcılarda, dönüşüm oranını artırmak.",
+                h0: 'Ürün kartına “Hemen Satın Al” butonu eklenmesi kullanıcı davranışını değiştirmez.',
+                h1: '“Hemen Satın Al” butonu mobil kullanıcıların ürüne olan etkileşimini ve satın alma oranını anlamlı şekilde artırır.',
+                metrics: ['“Hemen Satın Al” tıklama oranı', 'Toplam satın alma oranı', 'Ürün detayı ve satın alma adımı arasındaki süre'],
+                test: {
+                    groupA: { name: 'Grup A (Kontrol)', desc: 'Sadece “Detay” butonu', mockup: '<div class="border rounded-lg p-4 bg-white shadow-sm text-center"><div class="w-full h-24 bg-gray-200 rounded"></div><h3 class="font-bold mt-2">Telefon Modeli</h3><button class="w-full bg-gray-200 p-2 rounded mt-2">🔍 Detay</button></div>' },
+                    groupB: { name: 'Grup B (Test)', desc: '“Detay” + “Hemen Satın Al”', mockup: '<div class="border rounded-lg p-4 bg-white shadow-sm text-center"><div class="w-full h-24 bg-gray-200 rounded"></div><h3 class="font-bold mt-2">Telefon Modeli</h3><div class="flex gap-2 mt-2"><button class="w-1/2 bg-gray-200 p-2 rounded">🔍 Detay</button><button class="w-1/2 bg-green-500 text-white p-2 rounded">🛒 Hemen Al</button></div></div>' },
+                },
+                chartData: {
+                    labels: ['Grup A', 'Grup B'],
+                    metric: 'Toplam Satın Alma Oranı (%)',
+                    data: [2.5, 3.1]
+                }
+            },
+            {
+                id: 6,
+                title: "“Apple ile Giriş Yap” Seçeneği",
+                icon: "🍎",
+                goal: "Apple kullanıcılarının hızlı, güvenli ve sorunsuz giriş deneyimi yaşamalarını sağlayarak giriş terk oranını azaltmak ve dönüşüm oranını artırmak.",
+                h0: '“Apple ile Giriş Yap” seçeneği sunulması Apple kullanıcılarının davranışını değiştirmez.',
+                h1: '“Apple ile Giriş Yap” seçeneği, Apple kullanıcılarının giriş yapma oranlarını ve alışveriş dönüşümünü artırır.',
+                metrics: ['Apple kullanıcılarında giriş tamamlama oranı', 'Giriş sonrası sepet oluşturma oranı', 'Giriş sayfası bounce rate (Apple cihazlar)'],
+                test: {
+                    groupA: { name: 'Grup A (Kontrol)', desc: 'E-posta + Şifre / SMS Giriş', mockup: '<div class="border rounded-lg p-4 bg-white shadow-sm w-64 text-center"><h4 class="font-bold mb-4">Giriş Yap</h4><input type="email" placeholder="E-posta" class="w-full border rounded p-2 mb-2"/><input type="password" placeholder="Şifre" class="w-full border rounded p-2 mb-4"/><button class="w-full bg-blue-500 text-white p-2 rounded">Giriş Yap</button><p class="text-sm text-gray-500 mt-2">veya SMS ile giriş</p></div>' },
+                    groupB: { name: 'Grup B (Test)', desc: '“Apple ile Giriş” + Diğerleri', mockup: '<div class="border rounded-lg p-4 bg-white shadow-sm w-64 text-center"><h4 class="font-bold mb-4">Giriş Yap</h4><button class="w-full bg-black text-white p-2 rounded flex items-center justify-center gap-2 mb-2"><span class="text-lg"></span> Apple ile Giriş Yap</button><input type="email" placeholder="E-posta" class="w-full border rounded p-2 mb-2"/><input type="password" placeholder="Şifre" class="w-full border rounded p-2 mb-4"/><button class="w-full bg-blue-500 text-white p-2 rounded">Giriş Yap</button></div>' },
+                },
+                chartData: {
+                    labels: ['Grup A', 'Grup B'],
+                    metric: 'Giriş Tamamlama Oranı (Apple Kullanıcıları) (%)',
+                    data: [70.0, 85.0]
+                }
+            },
+            {
+                id: 7,
+                title: "“Favorilere Direkt Erişim”",
+                icon: "❤️",
+                goal: "Kullanıcının favori ürünlere ulaşmak için geçirdiği süreyi ve tıklama sayısını azaltmak, böylece daha hızlı aksiyon almasını sağlamak.",
+                h0: 'Kullanıcının favorilere ulaşma yolu (“Listeler > Favoriler”) ile doğrudan “Favoriler”e gitmesi arasında davranış farkı yoktur.',
+                h1: 'Favorilere direkt erişim, ürün etkileşimini ve sepete ekleme oranlarını artırır.',
+                metrics: ['Favori sayfa ziyaret oranı', 'Favorilerde geçirilen süre', 'Sepete ekleme oranı', 'Geri dönüş oranı'],
+                test: {
+                    groupA: { name: 'Grup A (Kontrol)', desc: '“Listeler > Favoriler” Klasik yol', mockup: '<div class="border rounded-lg p-4 bg-white shadow-sm w-64 text-center"><h4 class="font-bold mb-4">Menü</h4><ul class="text-left space-y-2"><li class="p-1 bg-gray-100 rounded">Anasayfa</li><li class="p-1 bg-gray-100 rounded">Kategoriler</li><li class="p-1 bg-blue-100 rounded">Listeler <span class="float-right">></span></li></ul><p class="text-sm mt-4 text-gray-500">Listeler > Favoriler</p></div>' },
+                    groupB: { name: 'Grup B (Test)', desc: '“Direkt Favoriler” butonu', mockup: '<div class="border rounded-lg p-4 bg-white shadow-sm w-64 text-center"><h4 class="font-bold mb-4">Menü</h4><ul class="text-left space-y-2"><li class="p-1 bg-gray-100 rounded">Anasayfa</li><li class="p-1 bg-gray-100 rounded">Kategoriler</li><li class="p-1 bg-orange-100 rounded text-orange-800 font-semibold">❤️ Favoriler</li></ul><p class="text-sm mt-4 text-gray-500">Tek tıkla Favoriler</p></div>' },
+                },
+                chartData: {
+                    labels: ['Grup A', 'Grup B'],
+                    metric: 'Sepete Ekleme Oranı (Favorilerden) (%)',
+                    data: [18.0, 25.0]
+                }
+            },
+            {
+                id: 8,
+                title: "Mobil “Hesabım” Sayfasında X ile Kapatılamama",
+                icon: "❌",
+                goal: "Mobil kullanıcıların “Hesabım” sayfasından kolay çıkabilmesini sağlamak ve alışverişe geri dönüş oranlarını artırmak.",
+                h0: '“Hesabım” sayfasında X ikonunun çalışmaması, kullanıcı davranışlarını anlamlı şekilde etkilemez.',
+                h1: 'X ikonunun işlevsel olmaması, kullanıcıların sayfada sıkışmasına ve alışveriş yolculuğunun yarıda kalmasına neden olur → etkileşim ve dönüşüm oranları düşer.',
+                metrics: ['“Hesabım” sayfasında geçirilen süre', 'Sayfadan sonra hiçbir işlem yapmadan çıkma oranı', 'Sepete geri dönüş oranı', 'Mobil bounce rate'],
+                test: {
+                    groupA: { name: 'Grup A (Kontrol)', desc: 'X çalışmıyor (mevcut)', mockup: '<div class="border-2 border-gray-800 rounded-2xl w-48 h-80 bg-white p-2 shadow-lg flex flex-col items-center justify-center relative"><div class="absolute top-2 right-2 text-gray-400 font-bold text-lg">X</div><h4 class="font-bold mb-4">Hesabım</h4><p class="text-sm text-gray-600">Geri tuşuyla çıkın</p></div>' },
+                    groupB: { name: 'Grup B (Test)', desc: 'X çalışıyor (fix uygulanmış)', mockup: '<div class="border-2 border-gray-800 rounded-2xl w-48 h-80 bg-white p-2 shadow-lg flex flex-col items-center justify-center relative"><div class="absolute top-2 right-2 text-red-500 font-bold text-lg cursor-pointer">X</div><h4 class="font-bold mb-4">Hesabım</h4><p class="text-sm text-gray-600">X ile kolayca çıkın</p></div>' },
+                },
+                chartData: {
+                    labels: ['Grup A', 'Grup B'],
+                    metric: 'Sepete Geri Dönüş Oranı (%)',
+                    data: [10.0, 15.0]
+                }
+            }
+        ];
+
+        const navigation = document.getElementById('navigation');
+        const mainContent = document.getElementById('main-content');
+        let activeChart = null;
+
+        function renderContent(hypothesis) {
+            mainContent.innerHTML = `
+                <div id="content-${hypothesis.id}" class="space-y-8 animate-fade-in">
+                    <div class="pb-4 border-b border-gray-200">
+                        <h2 class="text-3xl font-bold text-gray-800">${hypothesis.icon} ${hypothesis.title}</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Goal Card -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                            <h3 class="font-bold text-lg mb-2 text-[#f48220]">🎯 Amaç</h3>
+                            <p class="text-gray-700">${hypothesis.goal}</p>
+                        </div>
+
+                        <!-- Metrics Card -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                            <h3 class="font-bold text-lg mb-2 text-[#f48220]">📊 Metrikler</h3>
+                            <ul class="list-disc list-inside text-gray-700 space-y-1">
+                                ${hypothesis.metrics.map(metric => `<li>${metric}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Hypotheses Card -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <h3 class="font-bold text-lg mb-4 text-[#f48220]">🧪 Hipotezler</h3>
+                        <div class="flex flex-col md:flex-row gap-6">
+                            <div class="flex-1 p-4 bg-red-50 rounded-lg border border-red-200 transition-all duration-300 hover:scale-[1.02] hover:shadow-md">
+                                <strong class="text-red-800">H₀ (Null):</strong>
+                                <p class="text-red-700 mt-1">${hypothesis.h0}</p>
+                            </div>
+                            <div class="flex-1 p-4 bg-green-50 rounded-lg border border-green-200 transition-all duration-300 hover:scale-[1.02] hover:shadow-md">
+                                <strong class="text-green-800">H₁ (Alternative):</strong>
+                                <p class="text-green-700 mt-1">${hypothesis.h1}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- A/B Test Design Card -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <h3 class="font-bold text-lg mb-4 text-[#f48220]">🔬 A/B Test Tasarımı</h3>
+                        <div class="flex flex-col md:flex-row gap-6 items-center justify-center">
+                            <div class="flex-1 text-center">
+                                <h4 class="font-semibold">${hypothesis.test.groupA.name}</h4>
+                                <p class="text-sm text-gray-500 mb-2">${hypothesis.test.groupA.desc}</p>
+                                <div class="flex justify-center">${hypothesis.test.groupA.mockup}</div>
+                            </div>
+                            <div class="text-2xl font-bold text-gray-300">VS</div>
+                            <div class="flex-1 text-center">
+                                <h4 class="font-semibold">${hypothesis.test.groupB.name}</h4>
+                                <p class="text-sm text-gray-500 mb-2">${hypothesis.test.groupB.desc}</p>
+                                <div class="flex justify-center">${hypothesis.test.groupB.mockup}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Card -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <h3 class="font-bold text-lg mb-4 text-[#f48220]">📈 Potansiyel Sonuçlar</h3>
+                        <p class="text-sm text-gray-600 mb-4">Bu grafik, A/B testinin potansiyel sonucunu göstermek için varsayımsal veriler kullanır. Gerçek sonuçlar farklılık gösterebilir.</p>
+                        <div class="chart-container">
+                            <canvas id="resultChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (activeChart) {
+                activeChart.destroy();
+            }
+
+            const ctx = document.getElementById('resultChart').getContext('2d');
+            activeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: hypothesis.chartData.labels,
+                    datasets: [{
+                        label: hypothesis.chartData.metric,
+                        data: hypothesis.chartData.data,
+                        backgroundColor: [
+                            'rgba(108, 117, 125, 0.2)', // Gray for control group
+                            'rgba(244, 130, 32, 0.2)'  // Teknosa Orange for test group
+                        ],
+                        borderColor: [
+                            'rgb(108, 117, 125)',
+                            'rgb(244, 130, 32)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: hypothesis.chartData.metric
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function setActiveNav(id) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.getElementById(`nav-${id}`).classList.add('active');
+        }
+
+        hypothesesData.forEach(hyp => {
+            const navLink = document.createElement('a');
+            navLink.href = '#';
+            navLink.id = `nav-${hyp.id}`;
+            navLink.className = 'nav-item block p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200 text-sm';
+            navLink.innerHTML = `<span class="mr-2">${hyp.icon}</span> ${hyp.title}`;
+            navLink.onclick = (e) => {
+                e.preventDefault();
+                renderContent(hyp);
+                setActiveNav(hyp.id);
+            };
+            navigation.appendChild(navLink);
+        });
+
+        // Initial load
+        if (hypothesesData.length > 0) {
+            renderContent(hypothesesData[0]);
+            setActiveNav(hypothesesData[0].id);
+        }
+
+    </script>
+</body>
+</html>
 
