@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teknosa PDP UX Analiz Portalı v3.1</title>
+    <title>Teknosa PDP UX Analiz Portalı v3.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -225,6 +225,11 @@
             font-size: 0.875rem;
             color: #d1d5db;
         }
+        
+        /* YENİ: Chart için tıklanabilir imleç */
+        #kategoriChart .apexcharts-bar-area {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="p-4 sm:p-8">
@@ -347,14 +352,14 @@
                     </div>
                     <button onclick="openModal('modal-kaydet')" class="w-full bg-teknosa-orange text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">Çözüm Simülasyonu</button>
                 </div>
-                <!-- Bulgu 3 -->
+                <!-- GÜNCELLENMİŞ Bulgu 3 -->
                 <div class="card p-6 rounded-xl text-center flex flex-col justify-between">
                     <div>
                         <div class="mx-auto bg-orange-100 rounded-full h-16 w-16 flex items-center justify-center mb-4">
                            <svg class="h-8 w-8 text-teknosa-orange" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                         </div>
                         <h3 class="text-xl font-bold mb-2">Kaçırılan Fırsat: Karşılaştırma</h3>
-                        <p class="text-gray-500 mb-6">"Rakip sitedeki modelle karşılaştırmak için yeni sekme açtım." - Mert Yılmaz</p>
+                        <p class="text-gray-500 mb-6">"İki telefonu karşılaştırmak için sürekli sekmeler arasında gidip geldim." - Mert Yılmaz</p>
                     </div>
                     <button onclick="openModal('modal-karsilastir')" class="w-full bg-teknosa-orange text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">Çözüm Simülasyonu</button>
                 </div>
@@ -365,7 +370,7 @@
         <section id="veri" class="mb-16 p-8 rounded-xl bg-white">
             <div class="text-center mb-8">
                 <h2 class="text-3xl font-bold">Veri Analizi: Bilgi Eksikliği Sorununun Kök Nedenleri</h2>
-                <p class="text-gray-500 mt-2">Kullanıcıların en çok şikayet ettiği "bilgi eksikliği" sorununu, 8 kategoriden toplanan Excel verileriyle kanıtlıyoruz.</p>
+                <p class="text-gray-500 mt-2">Kullanıcıların en çok şikayet ettiği "bilgi eksikliği" sorununu, birleştirdiğimiz kategorilerdeki verilerle kanıtlıyoruz.</p>
             </div>
 
             <div class="mb-12">
@@ -384,7 +389,7 @@
 
             <div id="interactive-dashboard" class="mb-12">
                 <h3 class="text-2xl font-semibold mb-4 text-center">İnteraktif Sorun Panosu</h3>
-                <p class="text-center text-gray-500 mb-6 max-w-3xl mx-auto">Aşağıdaki grafik, incelenen 8 kategorideki sorun dağılımını göstermektedir. Daha detaylı bir analiz için her bir kategori çubuğunun üzerindeki <b class="text-teknosa-orange">detay ikonuna</b> tıklayabilirsiniz.</p>
+                <p class="text-center text-gray-500 mb-6 max-w-3xl mx-auto">Aşağıdaki grafik, incelenen kategorilerdeki sorun dağılımını göstermektedir. Daha detaylı bir analiz için ilgili kategori <b class="text-teknosa-orange">sütununa tıklayabilirsiniz.</b></p>
                 <div id="kategoriChart"></div>
             </div>
 
@@ -477,7 +482,7 @@
             </div>
         </section>
 
-        <!-- YENİ BÖLÜM: ROI Simülatörü -->
+        <!-- ROI Simülatörü -->
         <section id="roi-simulator" class="mb-16">
             <div class="text-center mb-8">
                 <h2 class="text-3xl font-bold">Yatırım Getirisi (ROI) Simülatörü</h2>
@@ -526,15 +531,15 @@
     <div id="modal-container"></div>
     
     <script>
-        // --- DATA ---
+        // --- GÜNCELLENMİŞ DATA ---
         const issueData = {
-            categories: ['Notebook', 'Elektrikli Süpürge', 'Android Telefon', 'Elektrikli Ev Aletleri', 'Tablet', 'Klima', 'Hava Temizleyici', 'Buharlı Ütü'],
+            categories: ['Notebook', 'Elektrikli Süpürge', 'Android Telefon', 'Elektrikli Ev Aletleri', 'Tablet'],
             series: [
-                { name: 'Ürün Açıklaması Eksik/Yok', data: [2006, 76, 259, 248, 53, 52, 22, 13] },
-                { name: 'Teknik Özellik Eksik', data: [0, 349, 0, 150, 20, 1, 9, 3] },
-                { name: 'Ürün Görseli Sorunlu', data: [0, 1, 0, 0, 11, 0, 0, 0] },
-                { name: 'Fiyat Bilgisi Yok', data: [28, 0, 0, 18, 2, 0, 0, 0] },
-                { name: 'Diğer (Teslimat, İade vb.)', data: [0, 4, 0, 1, 0, 0, 0, 0] }
+                { name: 'Ürün Açıklaması Eksik/Yok', data: [2006, 76, 259, 335, 53] },
+                { name: 'Teknik Özellik Eksik', data: [0, 349, 0, 163, 20] },
+                { name: 'Ürün Görseli Sorunlu', data: [0, 1, 0, 0, 11] },
+                { name: 'Fiyat Bilgisi Yok', data: [28, 0, 0, 18, 2] },
+                { name: 'Diğer (Teslimat, İade vb.)', data: [0, 4, 0, 1, 0] }
             ]
         };
 
@@ -575,7 +580,28 @@
                     },
                 },
                 grid: { borderColor: '#E5E7EB', strokeDashArray: 4 },
-                tooltip: { theme: 'light', y: { formatter: (val) => val + " sorun" } },
+                tooltip: { 
+                    theme: 'light', 
+                    y: { 
+                        formatter: (val) => val + " sorun" 
+                    },
+                    // YENİ: Tooltip başlığına tıklama yönlendirmesi eklendi
+                    marker: {
+                        show: true,
+                    },
+                    custom: function({series, seriesIndex, dataPointIndex, w}) {
+                        const category = w.globals.labels[dataPointIndex];
+                        const seriesName = w.globals.seriesNames[seriesIndex];
+                        const value = series[seriesIndex][dataPointIndex];
+                        return `<div class="apexcharts-tooltip-title" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;">${category}</div>` +
+                               `<div class="apexcharts-tooltip-series-group apexcharts-active" style="order: 1; display: flex;">` +
+                               `<span class="apexcharts-tooltip-marker" style="background-color: ${w.globals.colors[seriesIndex]};"></span>` +
+                               `<div class="apexcharts-tooltip-text" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;">` +
+                               `<div class="apexcharts-tooltip-y-group"><span class="apexcharts-tooltip-text-y-label">${seriesName}: </span><span class="apexcharts-tooltip-text-y-value">${value}</span></div>` +
+                               `</div></div>` +
+                               `<div class="text-xs text-center p-1 text-gray-500">Detaylar için sütuna tıklayın</div>`
+                    }
+                },
                 colors: ['#4338CA', '#F43F5E', '#16A34A', '#F97316', '#6B7280']
             };
             const kategoriChart = new ApexCharts(document.querySelector("#kategoriChart"), kategoriChartOptions);
@@ -852,12 +878,12 @@
                 `
             },
             'modal-karsilastir': {
-                title: 'Simülasyon: Gelişmiş Karşılaştırma',
-                description: 'Kullanıcıyı sitede tutmak ve karar vermesini kolaylaştırmak için rakip verilerini de içeren bir karşılaştırma.',
+                title: 'Simülasyon: Sayfa İçi Hızlı Karşılaştırma',
+                description: 'Kullanıcının sayfadan ayrılmadan, ilgilendiği ürünü diğer Teknosa ürünleriyle anında karşılaştırmasını sağlayan arayüz.',
                 beforeImg: 'https://i.imgur.com/20CoYl6.png',
-                beforeAlt: '[Mevcut durumda sadece Teknosa ürünlerini karşılaştıran ekran]',
+                beforeAlt: '[Mevcut Durum: Karşılaştırma için ayrı bir sayfaya gitmek gerekiyor]',
                 afterImg: 'https://i.imgur.com/Om9CV4t.png',
-                afterAlt: '[Öneri: Rakip ürün verilerini de gösteren karşılaştırma ekranı]',
+                afterAlt: '[Öneri: Ürün sayfasında açılan hızlı karşılaştırma paneli]',
                 notes: `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="note-card">
@@ -866,9 +892,9 @@
                                 <span>Tasarım Notları</span>
                             </div>
                             <ul class="space-y-2">
-                                <li class="checklist-item"><input type="checkbox" id="c-check1" class="rounded"><label for="c-check1">Karşılaştırılan özellikler satır bazında net bir şekilde ayrılmalı.</label></li>
-                                <li class="checklist-item"><input type="checkbox" id="c-check2" class="rounded"><label for="c-check2">Teknosa'nın sunduğu ürünün sütunu görsel olarak (örn: hafif renkli bir arka plan ile) vurgulanmalı.</label></li>
-                                <li class="checklist-item"><input type="checkbox" id="c-check3" class="rounded"><label for="c-check3">"Teknosa Avantajları" (hızlı kargo, mağazadan teslimat vb.) gibi rekabette öne çıkan hizmetler, tablonun altında belirtilmeli.</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="c-check1" class="rounded"><label for="c-check1">"Karşılaştır" butonu, ürün sayfasında kolayca erişilebilir bir yerde olmalı.</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="c-check2" class="rounded"><label for="c-check2">Açılan panelde (modal), mevcut ürün sabit kalmalı ve yanına eklenecek ürünler için bir arama çubuğu/öneri alanı bulunmalı.</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="c-check3" class="rounded"><label for="c-check3">Özellikler satır bazında net bir şekilde hizalanmalı ve farklılıklar görsel olarak (örn: renk veya ikonla) vurgulanmalı.</label></li>
                             </ul>
                         </div>
                         <div class="note-card">
@@ -877,9 +903,9 @@
                                 <span>Geliştirme Notları</span>
                             </div>
                              <ul class="space-y-2">
-                                <li class="checklist-item"><input type="checkbox" id="c-dev1" class="rounded"><label for="c-dev1">Rakip verileri, periyodik olarak çalışan bir "scraper" (web kazıyıcı) veya API entegrasyonu ile otomatik olarak çekilebilir.</label></li>
-                                <li class="checklist-item"><input type="checkbox" id="c-dev2" class="rounded"><label for="c-dev2">Verilerin güncelliği ve doğruluğu kritik öneme sahiptir. Veri kaynağı ve son güncelleme tarihi belirtilmelidir.</label></li>
-                                <li class="checklist-item"><input type="checkbox" id="c-dev3" class="rounded"><label for="c-dev3">Bu özellik için ayrı bir mikroservis mimarisi düşünülebilir.</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="c-dev1" class="rounded"><label for="c-dev1">Panel, sayfa yenilenmeden (asenkron olarak) açılmalı ve ürün verilerini bir iç API üzerinden çekmeli.</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="c-dev2" class="rounded"><label for="c-dev2">Arama çubuğu, anlık sonuçlar gösteren (autocomplete) bir yapıya sahip olmalı.</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="c-dev3" class="rounded"><label for="c-dev3">Öneri motoru, aynı kategori ve benzer fiyat aralığındaki popüler ürünleri önceliklendirebilir.</label></li>
                             </ul>
                         </div>
                     </div>
