@@ -1,1 +1,891 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teknosa PDP UX Analiz Portalı v3.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F4F6;
+            color: #1F2937;
+        }
+        :root {
+            --teknosa-orange: #f48220;
+        }
+        .text-teknosa-orange { color: var(--teknosa-orange); }
+        .bg-teknosa-orange { background-color: var(--teknosa-orange); }
+        .border-teknosa-orange { border-color: var(--teknosa-orange); }
+        
+        .card {
+            background-color: #FFFFFF;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+            transform: translateY(-5px);
+        }
+        .apexcharts-tooltip {
+            background: #FFFFFF !important;
+            color: #1F2937 !important;
+            border: 1px solid #E5E7EB !important;
+        }
+        
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7); display: flex;
+            align-items: center; justify-content: center; z-index: 50;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: #F9FAFB; padding: 2rem; border-radius: 0.75rem;
+            width: 90%; max-width: 900px; transform: scale(0.95);
+            transition: transform 0.3s ease; position: relative;
+            max-height: 90vh; overflow-y: auto;
+        }
+        .modal-overlay.visible .modal-content { transform: scale(1); }
+        .modal-close-button {
+            position: absolute; top: 1rem; right: 1rem; background: #E5E7EB;
+            border-radius: 9999px; width: 2rem; height: 2rem; display: flex;
+            align-items: center; justify-content: center; cursor: pointer;
+            z-index: 10;
+        }
 
+        .matrix {
+            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+            gap: 1rem; aspect-ratio: 2/1; max-width: 800px; margin: auto;
+        }
+        .quadrant { padding: 1rem; border-radius: 0.5rem; display: flex; flex-direction: column; justify-content: start; align-items: start; gap: 0.5rem; }
+        .matrix-item {
+            display: inline-flex; align-items: center; padding: 0.25rem 0.75rem;
+            border-radius: 9999px; font-size: 0.875rem; font-weight: 500;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .matrix-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .sticky-nav {
+            position: sticky; top: 0; z-index: 40;
+            backdrop-filter: blur(10px);
+        }
+        
+        .sim-tab {
+            padding: 0.5rem 1rem; cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease-in-out;
+        }
+        .sim-tab.active {
+            border-bottom-color: var(--teknosa-orange);
+            color: var(--teknosa-orange);
+            font-weight: 600;
+        }
+
+        /* UYGULAMA NOTLARI STİLLERİ */
+        .note-card {
+            background-color: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+        }
+        .note-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+        }
+        .checklist-item input {
+            margin-top: 0.25rem;
+        }
+        .checklist-item label {
+            color: #374151;
+            font-size: 0.95rem;
+        }
+        .code-block {
+            background-color: #1F2937;
+            color: #d1d5db;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            position: relative;
+        }
+        .copy-code-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #4B5563;
+            color: #E5E7EB;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-code-btn:hover {
+            background-color: #6B7280;
+        }
+
+        /* ROI CALCULATOR STYLES */
+        .roi-calculator {
+            background: linear-gradient(145deg, #ffffff, #f9fafb);
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        .slider-value {
+            font-weight: 700;
+            color: var(--teknosa-orange);
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 5px;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        input[type="range"]:hover {
+            opacity: 1;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--teknosa-orange);
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: var(--teknosa-orange);
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        .roi-output {
+            background: #111827;
+            color: #fff;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .roi-output h4 {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: #9ca3af;
+            margin-bottom: 0.5rem;
+        }
+        .roi-output .main-figure {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #2dd4bf;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+        .roi-output .sub-figures {
+            font-size: 0.875rem;
+            color: #d1d5db;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row items-center justify-between mb-6 pb-6 border-b-2 border-gray-200">
+            <div class="flex items-center">
+                <img src="https://i.imgur.com/IEfbJTg.png" alt="Teknosa Logosu" class="h-12 mr-4" onerror="this.onerror=null;this.src='https://placehold.co/48x48/f48220/ffffff?text=T';">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800">Ürün Detay Sayfası Analizi</h1>
+                    <p class="text-lg text-gray-500">Web / UX Departmanı</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sticky Navigation -->
+        <nav class="sticky-nav bg-gray-100/80 p-2 rounded-lg mb-12 shadow-sm">
+            <ul class="flex items-center justify-center flex-wrap space-x-2 sm:space-x-6 text-sm sm:text-base">
+                <li><a href="#ozet" class="font-semibold text-gray-600 hover:text-teknosa-orange transition-colors">Yönetici Özeti</a></li>
+                <li><a href="#personalar" class="font-semibold text-gray-600 hover:text-teknosa-orange transition-colors">Personalar</a></li>
+                <li><a href="#geribildirim" class="font-semibold text-gray-600 hover:text-teknosa-orange transition-colors">Kullanıcı Sorunları</a></li>
+                <li><a href="#veri" class="font-semibold text-gray-600 hover:text-teknosa-orange transition-colors">Veri Analizi</a></li>
+                <li><a href="#yolharitasi" class="font-semibold text-gray-600 hover:text-teknosa-orange transition-colors">Yol Haritası</a></li>
+                <li><a href="#roi-simulator" class="font-semibold text-gray-600 hover:text-teknosa-orange transition-colors">ROI Simülatörü</a></li>
+            </ul>
+        </nav>
+
+        <!-- Yönetici Özeti -->
+        <section id="ozet" class="mb-16">
+            <h2 class="text-3xl font-bold mb-6 text-center">Yönetici Özeti</h2>
+            <div class="card p-8 rounded-xl">
+                <p class="text-lg text-gray-600 leading-relaxed">
+                    Sayın Yetkili,
+                    <br><br>
+                    Bu rapor, Teknosa.com ürün detay sayfalarının (PDP) mevcut kullanıcı deneyimini derinlemesine analiz ederek, müşteri yolculuğundaki kritik engelleri ve kaçırılan dönüşüm fırsatlarını ortaya koymaktadır. <b>8 farklı kategoride</b> yapılan kapsamlı veri analizi ve nitel kullanıcı geri bildirimleri, genel deneyimin yeterli olmakla birlikte, özellikle <b>ürün bilgi mimarisi</b> ve <b>temel etkileşimlerdeki eksiklikler</b> sebebiyle müşterinin satın alma karar sürecinin sekteye uğradığını göstermektedir.
+                    <br><br>
+                    Temel bulgularımız, <b>sistematik bilgi eksikliklerinin</b> (teknik detay, açıklama) kullanıcı güvenini zedelediğini ve <b>kritik kullanılabilirlik hatalarının</b> (varyasyon seçimi, geri bildirim eksikliği) alışveriş akışını doğrudan kestiğini kanıtlamaktadır. Aşağıda sunulan analizler ve öneriler, bu sorunları adresleyerek hem kullanıcı memnuniyetini artırmayı hem de ticari hedeflere doğrudan katkı sağlamayı amaçlayan, veriye dayalı ve önceliklendirilmiş bir yol haritası sunmaktadır.
+                </p>
+            </div>
+        </section>
+
+        <!-- Analiz Personaları -->
+        <section id="personalar" class="mb-16">
+            <h2 class="text-3xl font-bold mb-6 text-center">Analiz Personaları</h2>
+            <p class="text-center text-gray-500 mb-8 max-w-3xl mx-auto">Sorunları daha iyi anlamak ve empati kurmak için, verilerimizden yola çıkarak oluşturduğumuz iki ana kullanıcı profilimiz.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card p-6 rounded-xl flex items-start space-x-4">
+                    <div class="flex-shrink-0 h-16 w-16 rounded-full bg-orange-100 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teknosa-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold">Mert Yılmaz (Detay Odaklı Mühendis)</h3>
+                        <p class="text-teknosa-orange font-semibold">"Her detayı bilmeliyim."</p>
+                        <ul class="list-disc list-inside text-gray-600 mt-2 text-sm space-y-1">
+                            <li>Karar vermeden önce tüm teknik özellikleri karşılaştırır.</li>
+                            <li>Eksik veya yetersiz ürün açıklamaları onu siteden soğutur.</li>
+                            <li>Güvenilir ve detaylı bilgiye her şeyden çok önem verir.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card p-6 rounded-xl flex items-start space-x-4">
+                     <div class="flex-shrink-0 h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold">Selin Kaya (Pragmatik Alışverişçi)</h3>
+                        <p class="text-indigo-600 font-semibold">"En iyi fiyata, en kolay yoldan."</p>
+                        <ul class="list-disc list-inside text-gray-600 mt-2 text-sm space-y-1">
+                            <li>Fiyat/performans ürünlerini arar, kullanıcı yorumlarını okur.</li>
+                            <li>Stokta olmayan ürünler ve karmaşık arayüzler zamanını çalar.</li>
+                            <li>Akıcı ve sorunsuz bir alışveriş deneyimi bekler.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Kullanıcı Geri Bildirimleri -->
+        <section id="geribildirim" class="mb-16 p-8 rounded-xl bg-white">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">Kullanıcı Geri Bildirimleri & Tespit Edilen Sorunlar</h2>
+                <p class="text-gray-500 mt-2">Kullanıcıların deneyimlediği somut sorunlar ve bunlara yönelik çözüm önerilerimiz.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Bulgu: Bilgi Eksikliği -->
+                 <div class="card p-6 rounded-xl text-center flex flex-col justify-between">
+                    <div>
+                        <div class="mx-auto bg-orange-100 rounded-full h-16 w-16 flex items-center justify-center mb-4">
+                            <svg class="h-8 w-8 text-teknosa-orange" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">En Büyük Engel: Bilgi Eksikliği</h3>
+                        <p class="text-gray-500 mb-6">"Bu ürünün watt değeri ne? Ölçüleri yazmıyor..." - Mert Yılmaz</p>
+                    </div>
+                    <a href="#veri" class="w-full bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">Veri Analizine Git</a>
+                </div>
+                <!-- Bulgu 1 -->
+                <div class="card p-6 rounded-xl text-center flex flex-col justify-between">
+                    <div>
+                        <div class="mx-auto bg-orange-100 rounded-full h-16 w-16 flex items-center justify-center mb-4">
+                            <svg class="h-8 w-8 text-teknosa-orange" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Kırık Akış: Varyasyon Seçimi</h3>
+                        <p class="text-gray-500 mb-6">"Siyah rengini görmek için tekrar arama yapmak zorunda kaldım." - Selin Kaya</p>
+                    </div>
+                    <button onclick="openModal('modal-varyasyon')" class="w-full bg-teknosa-orange text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">Çözüm Simülasyonu</button>
+                </div>
+                <!-- Bulgu 2 -->
+                <div class="card p-6 rounded-xl text-center flex flex-col justify-between">
+                    <div>
+                        <div class="mx-auto bg-orange-100 rounded-full h-16 w-16 flex items-center justify-center mb-4">
+                            <svg class="h-8 w-8 text-teknosa-orange" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Güven Eksiği: Geri Bildirim</h3>
+                        <p class="text-gray-500 mb-6">"Favorilere ekledim mi, emin olamadım." - Selin Kaya</p>
+                    </div>
+                    <button onclick="openModal('modal-kaydet')" class="w-full bg-teknosa-orange text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">Çözüm Simülasyonu</button>
+                </div>
+                <!-- Bulgu 3 -->
+                <div class="card p-6 rounded-xl text-center flex flex-col justify-between">
+                    <div>
+                        <div class="mx-auto bg-orange-100 rounded-full h-16 w-16 flex items-center justify-center mb-4">
+                           <svg class="h-8 w-8 text-teknosa-orange" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Kaçırılan Fırsat: Karşılaştırma</h3>
+                        <p class="text-gray-500 mb-6">"Rakip sitedeki modelle karşılaştırmak için yeni sekme açtım." - Mert Yılmaz</p>
+                    </div>
+                    <button onclick="openModal('modal-karsilastir')" class="w-full bg-teknosa-orange text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">Çözüm Simülasyonu</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Veri Analizi -->
+        <section id="veri" class="mb-16 p-8 rounded-xl bg-white">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold">Veri Analizi: Bilgi Eksikliği Sorununun Kök Nedenleri</h2>
+                <p class="text-gray-500 mt-2">Kullanıcıların en çok şikayet ettiği "bilgi eksikliği" sorununu, 8 kategoriden toplanan Excel verileriyle kanıtlıyoruz.</p>
+            </div>
+
+            <div class="mb-12">
+                 <div class="card p-6 rounded-xl bg-orange-50 border border-teknosa-orange flex items-center space-x-4">
+                    <div class="flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-teknosa-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01M12 6v-1m0-1V4m0 2.01M12 14v4.01M12 18v1m0 1v1m0-2.01M5.636 5.636l1.414 1.414M18.364 18.364l-1.414-1.414M6.343 17.657l1.414-1.414M17.657 6.343l-1.414 1.414" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">Fırsat Maliyeti Göstergesi</h3>
+                        <p class="text-gray-600">Tahminlerimize göre, ürün detay sayfalarındaki bilgi eksiklikleri, kullanıcıların <b>%5-8</b> oranında siteden ayrılmasına neden oluyor. Bu durum, önemli bir ciro kaybı potansiyeli taşımaktadır.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="interactive-dashboard" class="mb-12">
+                <h3 class="text-2xl font-semibold mb-4 text-center">İnteraktif Sorun Panosu</h3>
+                <p class="text-center text-gray-500 mb-6 max-w-3xl mx-auto">Aşağıdaki grafik, incelenen 8 kategorideki sorun dağılımını göstermektedir. Daha detaylı bir analiz için her bir kategori çubuğunun üzerindeki <b class="text-teknosa-orange">detay ikonuna</b> tıklayabilirsiniz.</p>
+                <div id="kategoriChart"></div>
+            </div>
+
+            <div>
+                <h3 class="text-2xl font-semibold mb-6 text-center">Etki-Efor Matrisi: Önceliklendirme Haritası</h3>
+                <div class="matrix relative border border-gray-200 p-4 rounded-lg">
+                    <!-- Eksenler -->
+                    <div class="absolute -left-8 top-1/2 -translate-y-1/2 -rotate-90 font-semibold text-gray-500 tracking-wider">ETKİ</div>
+                    <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 font-semibold text-gray-500 tracking-wider">EFOR</div>
+                    <div class="absolute -left-2 top-2 text-sm text-gray-400">Yüksek</div>
+                    <div class="absolute -left-2 bottom-2 text-sm text-gray-400">Düşük</div>
+                    <div class="absolute left-2 -bottom-6 text-sm text-gray-400">Düşük</div>
+                    <div class="absolute right-2 -bottom-6 text-sm text-gray-400">Yüksek</div>
+
+                    <!-- Quadrants -->
+                    <div class="quadrant bg-green-50 border-2 border-dashed border-green-300">
+                        <h4 class="font-bold text-lg text-green-800 flex items-center mb-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7.014A8.003 8.003 0 0117.657 18.657z" /></svg>Hızlı Kazanımlar</h4>
+                        <div class="flex flex-wrap gap-2">
+                             <span onclick="openModal('modal-varyasyon')" class="matrix-item bg-green-200 text-green-800">Varyasyon Seçimi</span>
+                             <span onclick="openModal('modal-kaydet')" class="matrix-item bg-green-200 text-green-800">Kaydet Geri Bildirimi</span>
+                        </div>
+                    </div>
+                    <div class="quadrant bg-blue-50 border-2 border-dashed border-blue-300">
+                        <h4 class="font-bold text-lg text-blue-800 flex items-center mb-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>Büyük Projeler</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="#veri" class="matrix-item bg-blue-200 text-blue-800">Bilgi Eksikliklerini Giderme</a>
+                            <span onclick="openModal('modal-karsilastir')" class="matrix-item bg-blue-200 text-blue-800">Gelişmiş Karşılaştırma</span>
+                        </div>
+                    </div>
+                    <div class="quadrant bg-yellow-50 border-2 border-dashed border-yellow-300">
+                        <h4 class="font-bold text-lg text-yellow-800 flex items-center mb-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" /></svg>Doldurma Görevler</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="matrix-item bg-yellow-200 text-yellow-800">Erişilebilirlik Düzeltmesi</span>
+                        </div>
+                    </div>
+                    <div class="quadrant bg-red-50 border-2 border-dashed border-red-300">
+                        <h4 class="font-bold text-lg text-red-800 flex items-center mb-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>Zaman Tuzağı</h4>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Stratejik Yol Haritası -->
+        <section id="yolharitasi" class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-center">Stratejik Yol Haritası: Öneriler ve Gelecek Adımlar</h2>
+            <div class="card p-8 rounded-xl">
+                 <p class="text-lg text-gray-600 leading-relaxed mb-8 text-center max-w-4xl mx-auto">
+                    Analizlerimizin ışığında, PDP deneyimini iyileştirmek için üç aşamalı bir stratejik plan öneriyoruz. Bu plan, acil sorunları çözmek, altyapıyı güçlendirmek ve sektörde fark yaratacak yenilikçi adımlar atmayı hedeflemektedir.
+                </p>
+                <div class="relative">
+                    <!-- Timeline line -->
+                    <div class="absolute left-1/2 -translate-x-1/2 h-full w-0.5 bg-gray-200" aria-hidden="true"></div>
+                    
+                    <div class="space-y-16">
+                        <!-- Faz 1 -->
+                        <div class="relative flex justify-center">
+                            <div class="w-full md:w-1/2 md:pr-8 text-right">
+                                <div class="p-6 bg-green-50 rounded-lg border border-green-200">
+                                    <h3 class="text-xl font-bold text-green-800">1. Faz: Temel Düzeltmeler (Hızlı Kazanımlar)</h3>
+                                    <p class="text-gray-600 mt-2">Kullanıcı yolculuğundaki en bariz engelleri kaldırarak anında etki yaratacak, düşük eforlu görevler. (Örn: Varyasyon seçimi, Geri bildirim mekanizmaları).</p>
+                                </div>
+                            </div>
+                            <div class="absolute left-1/2 -translate-x-1/2 bg-white h-12 w-12 rounded-full border-4 border-green-500 flex items-center justify-center font-bold text-green-500 text-xl">1</div>
+                            <div class="w-1/2 pl-8 hidden md:block"></div>
+                        </div>
+                        <!-- Faz 2 -->
+                        <div class="relative flex justify-center">
+                             <div class="w-1/2 pr-8 hidden md:block"></div>
+                             <div class="w-full md:w-1/2 md:pl-8 text-left">
+                                <div class="p-6 bg-blue-50 rounded-lg border border-blue-200">
+                                    <h3 class="text-xl font-bold text-blue-800">2. Faz: Sistematik İyileştirmeler</h3>
+                                    <p class="text-gray-600 mt-2">Veri standardizasyonu ve içerik zenginleştirmeye odaklanarak platformun temelini sağlamlaştıran adımlar. (Örn: Zorunlu teknik bilgi, Gelişmiş karşılaştırma motoru).</p>
+                                </div>
+                            </div>
+                            <div class="absolute left-1/2 -translate-x-1/2 bg-white h-12 w-12 rounded-full border-4 border-blue-500 flex items-center justify-center font-bold text-blue-500 text-xl">2</div>
+                        </div>
+                        <!-- Faz 3 -->
+                        <div class="relative flex justify-center">
+                            <div class="w-full md:w-1/2 md:pr-8 text-right">
+                                <div class="p-6 bg-yellow-50 rounded-lg border border-yellow-200">
+                                    <h3 class="text-xl font-bold text-yellow-800">3. Faz: İnovasyon ve Kişiselleştirme</h3>
+                                    <p class="text-gray-600 mt-2">Kullanıcıya özel deneyimler sunarak marka sadakatini artıracak ve rekabette öne çıkacak vizyoner projeler. (Örn: AI destekli öneriler, Gelişmiş kullanıcı yorumları).</p>
+                                </div>
+                            </div>
+                            <div class="absolute left-1/2 -translate-x-1/2 bg-white h-12 w-12 rounded-full border-4 border-yellow-500 flex items-center justify-center font-bold text-yellow-500 text-xl">3</div>
+                            <div class="w-1/2 pl-8 hidden md:block"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- YENİ BÖLÜM: ROI Simülatörü -->
+        <section id="roi-simulator" class="mb-16">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold">Yatırım Getirisi (ROI) Simülatörü</h2>
+                <p class="text-gray-500 mt-2 max-w-3xl mx-auto">Bu interaktif araç, önerilen UX iyileştirmelerinin potansiyel finansal etkisini somut rakamlarla görmenizi sağlar. Aşağıdaki değerleri değiştirerek farklı senaryoların ciroya etkisini anında simüle edebilirsiniz.</p>
+            </div>
+            <div class="card roi-calculator p-8 rounded-xl shadow-2xl">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <!-- Input Controls -->
+                    <div class="space-y-6">
+                        <div>
+                            <label for="traffic" class="slider-label"><span>Aylık PDP Trafiği</span><span id="traffic-value" class="slider-value"></span></label>
+                            <input type="range" id="traffic" min="100000" max="5000000" step="100000" value="1500000">
+                        </div>
+                        <div>
+                            <label for="conversion" class="slider-label"><span>Mevcut Dönüşüm Oranı (%)</span><span id="conversion-value" class="slider-value"></span></label>
+                            <input type="range" id="conversion" min="0.5" max="5" step="0.1" value="1.2">
+                        </div>
+                        <div>
+                            <label for="aov" class="slider-label"><span>Ortalama Sepet Tutarı (TL)</span><span id="aov-value" class="slider-value"></span></label>
+                            <input type="range" id="aov" min="500" max="10000" step="100" value="2500">
+                        </div>
+                        <div class="p-4 rounded-lg bg-orange-50 border-2 border-dashed border-teknosa-orange">
+                            <label for="uplift" class="slider-label"><span>Tahmini Dönüşüm Artışı (%)</span><span id="uplift-value" class="slider-value"></span></label>
+                            <input type="range" id="uplift" min="1" max="20" step="0.5" value="8">
+                            <p class="text-xs text-gray-500 mt-2">Önerilen iyileştirmelerle dönüşüm oranında hedeflenen artış.</p>
+                        </div>
+                    </div>
+                    <!-- Output Display -->
+                    <div class="roi-output">
+                        <h4>Tahmini Ek Aylık Ciro</h4>
+                        <div id="roi-result" class="main-figure">
+                            + 0 TL
+                        </div>
+                        <div class="sub-figures">
+                            <p>Mevcut Ciro: <span id="current-revenue">0 TL</span></p>
+                            <p>Potansiyel Yeni Ciro: <span id="new-revenue">0 TL</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-container"></div>
+    
+    <script>
+        // --- DATA ---
+        const issueData = {
+            categories: ['Notebook', 'Elektrikli Süpürge', 'Android Telefon', 'Elektrikli Ev Aletleri', 'Tablet', 'Klima', 'Hava Temizleyici', 'Buharlı Ütü'],
+            series: [
+                { name: 'Ürün Açıklaması Eksik/Yok', data: [2006, 76, 259, 248, 53, 52, 22, 13] },
+                { name: 'Teknik Özellik Eksik', data: [0, 349, 0, 150, 20, 1, 9, 3] },
+                { name: 'Ürün Görseli Sorunlu', data: [0, 1, 0, 0, 11, 0, 0, 0] },
+                { name: 'Fiyat Bilgisi Yok', data: [28, 0, 0, 18, 2, 0, 0, 0] },
+                { name: 'Diğer (Teslimat, İade vb.)', data: [0, 4, 0, 1, 0, 0, 0, 0] }
+            ]
+        };
+
+        // --- CHARTS & CALCULATORS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Main category chart
+            const kategoriChartOptions = {
+                series: issueData.series,
+                chart: {
+                    type: 'bar', height: 450, stacked: true,
+                    toolbar: { show: false },
+                    events: {
+                        dataPointSelection: (event, chartContext, config) => {
+                            const categoryIndex = config.dataPointIndex;
+                            const categoryName = issueData.categories[categoryIndex];
+                            openCategoryModal(categoryName, categoryIndex);
+                        }
+                    }
+                },
+                plotOptions: { bar: { horizontal: false, columnWidth: '60%', borderRadius: 8, } },
+                xaxis: { categories: issueData.categories, labels: { style: { colors: '#6B7280', fontSize: '12px' } } },
+                yaxis: { labels: { style: { colors: '#6B7280', fontSize: '12px' } } },
+                legend: { position: 'top', horizontalAlign: 'center', labels: { colors: '#374151' }, markers: { width: 12, height: 12, radius: 12, }, },
+                fill: { opacity: 1 },
+                dataLabels: {
+                    enabled: true,
+                    formatter: function (val, opts) {
+                        const total = opts.w.globals.stackedSeriesTotals[opts.dataPointIndex];
+                        if (opts.w.globals.series[opts.seriesIndex][opts.dataPointIndex] === total) {
+                           return 'ⓘ';
+                        }
+                        return '';
+                    },
+                    offsetY: -10,
+                    style: {
+                        fontSize: '16px',
+                        colors: ["var(--teknosa-orange)"]
+                    },
+                },
+                grid: { borderColor: '#E5E7EB', strokeDashArray: 4 },
+                tooltip: { theme: 'light', y: { formatter: (val) => val + " sorun" } },
+                colors: ['#4338CA', '#F43F5E', '#16A34A', '#F97316', '#6B7280']
+            };
+            const kategoriChart = new ApexCharts(document.querySelector("#kategoriChart"), kategoriChartOptions);
+            kategoriChart.render();
+
+            // ROI Calculator
+            initializeRoiCalculator();
+        });
+        
+        // --- ROI CALCULATOR LOGIC ---
+        function initializeRoiCalculator() {
+            const trafficSlider = document.getElementById('traffic');
+            const conversionSlider = document.getElementById('conversion');
+            const aovSlider = document.getElementById('aov');
+            const upliftSlider = document.getElementById('uplift');
+
+            const trafficValue = document.getElementById('traffic-value');
+            const conversionValue = document.getElementById('conversion-value');
+            const aovValue = document.getElementById('aov-value');
+            const upliftValue = document.getElementById('uplift-value');
+
+            const roiResult = document.getElementById('roi-result');
+            const currentRevenueEl = document.getElementById('current-revenue');
+            const newRevenueEl = document.getElementById('new-revenue');
+
+            const formatCurrency = (value) => {
+                return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0 }).format(value);
+            };
+            
+            const formatNumber = (value) => {
+                 return new Intl.NumberFormat('tr-TR').format(value);
+            };
+
+            function calculateROI() {
+                const traffic = parseFloat(trafficSlider.value);
+                const conversion = parseFloat(conversionSlider.value);
+                const aov = parseFloat(aovSlider.value);
+                const uplift = parseFloat(upliftSlider.value);
+
+                // Update display values
+                trafficValue.textContent = formatNumber(traffic);
+                conversionValue.textContent = `%${conversion.toFixed(1)}`;
+                aovValue.textContent = formatCurrency(aov);
+                upliftValue.textContent = `%${uplift.toFixed(1)}`;
+
+                // Calculations
+                const currentRevenue = traffic * (conversion / 100) * aov;
+                const newConversionRate = conversion * (1 + (uplift / 100));
+                const newRevenue = traffic * (newConversionRate / 100) * aov;
+                const additionalRevenue = newRevenue - currentRevenue;
+
+                // Update results
+                roiResult.textContent = `+ ${formatCurrency(additionalRevenue)}`;
+                currentRevenueEl.textContent = formatCurrency(currentRevenue);
+                newRevenueEl.textContent = formatCurrency(newRevenue);
+            }
+
+            [trafficSlider, conversionSlider, aovSlider, upliftSlider].forEach(slider => {
+                slider.addEventListener('input', calculateROI);
+            });
+
+            // Initial calculation
+            calculateROI();
+        }
+
+
+        // --- MODAL LOGIC ---
+        const modalContainer = document.getElementById('modal-container');
+        let currentModalChart = null;
+
+        function openModal(modalId) {
+            const modalData = modals[modalId];
+            if (!modalData) return;
+
+            modalContainer.innerHTML = `
+                <div id="${modalId}" class="modal-overlay" onclick="closeCurrentModal(event)">
+                    <div class="modal-content" onclick="event.stopPropagation()">
+                        <button class="modal-close-button" onclick="closeCurrentModal(event)">
+                            <svg class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                        <h3 class="text-2xl font-bold mb-2 text-center">${modalData.title}</h3>
+                        <p class="text-gray-500 text-center mb-6">${modalData.description}</p>
+                        
+                        <div class="border-b border-gray-200 mb-4">
+                            <nav class="-mb-px flex justify-center space-x-8" aria-label="Tabs">
+                                <button onclick="switchTab(this, 'problem')" class="sim-tab active">Sorun</button>
+                                <button onclick="switchTab(this, 'solution')" class="sim-tab">Çözüm Önerisi</button>
+                                <button onclick="switchTab(this, 'notes')" class="sim-tab">Uygulama Notları</button>
+                            </nav>
+                        </div>
+
+                        <div id="problem-content">
+                             <img src="${modalData.beforeImg}" alt="${modalData.beforeAlt}" class="rounded-md shadow-md w-full h-auto" onerror="this.onerror=null;this.src='https://placehold.co/800x450/cccccc/ffffff?text=Mevcut+Tasar%C4%B1m';">
+                        </div>
+                        <div id="solution-content" style="display:none;">
+                             <img src="${modalData.afterImg}" alt="${modalData.afterAlt}" class="rounded-md shadow-md w-full h-auto" onerror="this.onerror=null;this.src='https://placehold.co/800x450/f48220/ffffff?text=%C3%96neri+Tasar%C4%B1m';">
+                        </div>
+                        <div id="notes-content" style="display:none;" class="p-4 bg-gray-100 rounded-md">
+                            ${modalData.notes}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const modalOverlay = document.getElementById(modalId);
+            void modalOverlay.offsetWidth;
+            modalOverlay.classList.add('visible');
+        }
+
+        function switchTab(tabElement, contentId) {
+            const problemContent = document.getElementById('problem-content');
+            const solutionContent = document.getElementById('solution-content');
+            const notesContent = document.getElementById('notes-content');
+            const tabs = document.querySelectorAll('.sim-tab');
+
+            tabs.forEach(t => t.classList.remove('active'));
+            tabElement.classList.add('active');
+            
+            problemContent.style.display = 'none';
+            solutionContent.style.display = 'none';
+            notesContent.style.display = 'none';
+
+            document.getElementById(contentId + '-content').style.display = 'block';
+        }
+        
+        function openCategoryModal(categoryName, categoryIndex) {
+            const seriesData = issueData.series.map(s => s.data[categoryIndex]).filter(d => d > 0);
+            const labels = issueData.series.map(s => s.name).filter((name, i) => issueData.series[i].data[categoryIndex] > 0);
+
+            const modalId = 'modal-category-detail';
+            const modalHTML = `
+                <button class="modal-close-button" onclick="closeCurrentModal(event)">
+                    <svg class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+                <h3 class="text-2xl font-bold mb-4 text-center">${categoryName}: Sorun Dökümü</h3>
+                <div id="modal-chart-container" style="min-height: 300px;"></div>
+            `;
+            
+            modalContainer.innerHTML = `
+                <div id="${modalId}" class="modal-overlay" onclick="closeCurrentModal(event)">
+                    <div class="modal-content" onclick="event.stopPropagation()">
+                        ${modalHTML}
+                    </div>
+                </div>
+            `;
+            
+            const modalOverlay = document.getElementById(modalId);
+            void modalOverlay.offsetWidth;
+            modalOverlay.classList.add('visible');
+            
+            if (currentModalChart) { currentModalChart.destroy(); }
+
+            currentModalChart = new ApexCharts(document.querySelector("#modal-chart-container"), {
+                series: seriesData, labels: labels, chart: { type: 'donut', height: 350 },
+                plotOptions: { pie: { donut: { size: '60%' } } },
+                dataLabels: { enabled: true, formatter: (val, opts) => opts.w.config.labels[opts.seriesIndex] + ': ' + opts.w.globals.series[opts.seriesIndex], dropShadow: { enabled: false } },
+                legend: { show: false }, colors: ['#4338CA', '#F43F5E', '#16A34A', '#F97316', '#6B7280'],
+                tooltip: { theme: 'light', y: { formatter: (val) => val + " sorun" } }
+            });
+            currentModalChart.render();
+        }
+
+        function closeCurrentModal(event) {
+            const modalOverlay = document.querySelector('.modal-overlay.visible');
+            if (modalOverlay) {
+                modalOverlay.classList.remove('visible');
+                setTimeout(() => {
+                    modalContainer.innerHTML = '';
+                    if (currentModalChart) {
+                        currentModalChart.destroy();
+                        currentModalChart = null;
+                    }
+                }, 300);
+            }
+        }
+        
+        function copyCode(button) {
+            const codeBlock = button.previousElementSibling;
+            const code = codeBlock.innerText;
+            const textarea = document.createElement('textarea');
+            textarea.value = code;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                button.innerText = 'Kopyalandı!';
+                setTimeout(() => {
+                    button.innerText = 'Kopyala';
+                }, 2000);
+            } catch (err) {
+                console.error('Kod kopyalanamadı', err);
+                button.innerText = 'Hata!';
+            }
+            document.body.removeChild(textarea);
+        }
+
+        const modals = {
+            'modal-varyasyon': {
+                title: 'Simülasyon: Ürün Varyasyon Seçimi',
+                description: 'Kullanıcının farklı ürün seçenekleri arasında kolayca geçiş yapabilmesi için önerilen arayüz.',
+                beforeImg: 'https://i.imgur.com/B1vzLlC.png',
+                beforeAlt: '[Mevcut durumda varyasyon seçeneği olmayan tasarım]',
+                afterImg: 'https://i.imgur.com/95NsPOB.png',
+                afterAlt: '[Öneri: Renk ve depolama seçenekleri eklenmiş tasarım]',
+                notes: `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="note-card">
+                            <div class="note-card-header text-purple-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
+                                <span>Tasarım Notları</span>
+                            </div>
+                            <ul class="space-y-2">
+                                <li class="checklist-item"><input type="checkbox" id="v-check1" class="rounded"><label for="v-check1">Seçenekler (renk/depolama) "Sepete Ekle" butonuna yakın konumlandırılmalı.</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="v-check2" class="rounded"><label for="v-check2">Seçili olan varyasyon net bir şekilde belirtilmeli (örn: çerçeve veya ikon ile).</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="v-check3" class="rounded"><label for="v-check3">Stokta olmayan varyasyonlar tıklanamaz (disabled) hale getirilmeli ve üzerine "Stokta Yok" yazılmalı.</label></li>
+                            </ul>
+                        </div>
+                        <div class="note-card">
+                            <div class="note-card-header text-blue-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                                <span>Geliştirme Notları</span>
+                            </div>
+                            <ul class="space-y-2 mb-4">
+                                <li class="checklist-item"><input type="checkbox" id="v-dev1" class="rounded"><label for="v-dev1">Bileşen, ürün ID'sini değiştirmeden sayfa içeriğini (fiyat, görsel, stok durumu) dinamik olarak güncellemeli (AJAX/Fetch API).</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="v-dev2" class="rounded"><label for="v-dev2">Her varyasyonun kendine ait bir URL'i olması SEO açısından faydalıdır (isteğe bağlı, History API ile yönetilebilir).</label></li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+            'modal-kaydet': {
+                title: 'Simülasyon: Kaydetme Geri Bildirimi',
+                description: 'Kullanıcının eyleminin başarılı olduğunu anında gösteren bir geri bildirim mekanizması.',
+                beforeImg: 'https://i.imgur.com/lYfFZx2.png',
+                beforeAlt: '[Mevcut durumda geri bildirim olmayan tasarım]',
+                afterImg: 'https://i.imgur.com/wJN7zEE.png',
+                afterAlt: '[Öneri: \'Kaydedildi\' bildirimi çıkan tasarım]',
+                notes: `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="note-card">
+                            <div class="note-card-header text-purple-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
+                                <span>Tasarım Notları</span>
+                            </div>
+                            <ul class="space-y-2">
+                                <li class="checklist-item"><input type="checkbox" id="s-check1" class="rounded"><label for="s-check1">Geri bildirim, "toast" adı verilen ve ekranın köşesinde birkaç saniye kalıp kaybolan bir bildirim olmalı.</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="s-check2" class="rounded"><label for="s-check2">Bildirimde "Ürün favorilerinize eklendi" gibi net bir mesaj ve "Favorilerim" sayfasına bir link bulunabilir.</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="s-check3" class="rounded"><label for="s-check3">"Kaydet" butonunun ikonu, ürün kaydedildikten sonra dolu bir kalp ikonuna dönüşebilir (stateful icon).</label></li>
+                            </ul>
+                        </div>
+                        <div class="note-card">
+                            <div class="note-card-header text-blue-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                                <span>Geliştirme Notları</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">Örnek Toast Bildirim Fonksiyonu:</p>
+                            <div class="code-block">
+<pre><code>function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast-notification';
+  toast.innerText = message;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
+}
+
+// Kullanım:
+// showToast('Ürün favorilere eklendi!');</code></pre>
+                                <button class="copy-code-btn" onclick="copyCode(this)">Kopyala</button>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            'modal-karsilastir': {
+                title: 'Simülasyon: Gelişmiş Karşılaştırma',
+                description: 'Kullanıcıyı sitede tutmak ve karar vermesini kolaylaştırmak için rakip verilerini de içeren bir karşılaştırma.',
+                beforeImg: 'https://i.imgur.com/20CoYl6.png',
+                beforeAlt: '[Mevcut durumda sadece Teknosa ürünlerini karşılaştıran ekran]',
+                afterImg: 'https://i.imgur.com/Om9CV4t.png',
+                afterAlt: '[Öneri: Rakip ürün verilerini de gösteren karşılaştırma ekranı]',
+                notes: `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="note-card">
+                            <div class="note-card-header text-purple-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
+                                <span>Tasarım Notları</span>
+                            </div>
+                            <ul class="space-y-2">
+                                <li class="checklist-item"><input type="checkbox" id="c-check1" class="rounded"><label for="c-check1">Karşılaştırılan özellikler satır bazında net bir şekilde ayrılmalı.</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="c-check2" class="rounded"><label for="c-check2">Teknosa'nın sunduğu ürünün sütunu görsel olarak (örn: hafif renkli bir arka plan ile) vurgulanmalı.</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="c-check3" class="rounded"><label for="c-check3">"Teknosa Avantajları" (hızlı kargo, mağazadan teslimat vb.) gibi rekabette öne çıkan hizmetler, tablonun altında belirtilmeli.</label></li>
+                            </ul>
+                        </div>
+                        <div class="note-card">
+                            <div class="note-card-header text-blue-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                                <span>Geliştirme Notları</span>
+                            </div>
+                             <ul class="space-y-2">
+                                <li class="checklist-item"><input type="checkbox" id="c-dev1" class="rounded"><label for="c-dev1">Rakip verileri, periyodik olarak çalışan bir "scraper" (web kazıyıcı) veya API entegrasyonu ile otomatik olarak çekilebilir.</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="c-dev2" class="rounded"><label for="c-dev2">Verilerin güncelliği ve doğruluğu kritik öneme sahiptir. Veri kaynağı ve son güncelleme tarihi belirtilmelidir.</label></li>
+                                <li class="checklist-item"><input type="checkbox" id="c-dev3" class="rounded"><label for="c-dev3">Bu özellik için ayrı bir mikroservis mimarisi düşünülebilir.</label></li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            }
+        };
+    </script>
+</body>
+</html>
