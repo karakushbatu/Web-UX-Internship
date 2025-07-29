@@ -1,852 +1,125 @@
 <!DOCTYPE html>
-<html lang="tr" class="scroll-smooth">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teknosa.com UX Analizi: Sepet ve Satın Alma Süreci</title>
+    <title>Teknosa WEB/UX Departmanı - UX Raporları</title>
+    
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lexend:wght@600;700&display=swap" rel="stylesheet">
-    <!-- CONFIRMATION: This version incorporates all user feedback as of July 21, 2025. -->
-    <!-- Key Changes: 
-        1. Chart Rendering Fix 2.0: Implemented ResizeObserver for all charts. This is a more robust solution that ensures the chart's container has valid dimensions before rendering, definitively fixing the issue where charts would not appear on initial load on wide screens.
-    -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        :root {
-            --bg-main: #f8fafc;
-            --text-dark: #1f2937;
-            --text-light: #4b5563;
-            --accent: #F96D01;
-            --border-color: #e5e7eb;
-            --white: #ffffff;
-            --font-display: 'Lexend', sans-serif;
-        }
+        /* Inter fontunu tüm sayfaya uygula */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-light);
         }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: var(--font-display);
-            color: var(--text-dark);
+        
+        /* Teknosa'nın özel turuncu rengini Tailwind için tanımlama */
+        .bg-teknosa-orange {
+            background-color: #f48220;
         }
-        .quick-nav {
-            top: 80px; /* Height of the main header */
+        .text-teknosa-orange {
+            color: #f48220;
         }
-        .filter-btn.active {
-            background-color: var(--accent);
-            color: white;
-            border-color: var(--accent);
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        .border-teknosa-orange {
+            border-color: #f48220;
         }
-        .chart-container {
-            position: relative;
-            height: 450px;
-            width: 100%;
-            max-width: 550px;
-            margin: auto;
-        }
-        .matrix-point {
-            transition: all 0.2s ease-in-out;
-        }
-        .matrix-point:hover {
-            transform: scale(1.15);
-            z-index: 10;
-        }
-        .heuristic-label {
-            text-decoration: underline;
-            text-decoration-style: dotted;
-        }
-        .modal { transition: opacity 0.25s ease; }
-        .modal-content { transition: transform 0.25s ease; }
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
+        .hover\:bg-teknosa-orange-dark:hover {
+            background-color: #e07014; /* Hover için biraz daha koyu bir ton */
         }
     </style>
 </head>
-<body class="antialiased">
+<body class="bg-gray-50">
 
-    <!-- Header -->
-    <header class="bg-white/90 backdrop-blur-lg sticky top-0 z-40 shadow-sm border-b border-[var(--border-color)]">
-        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                <div class="flex items-center min-w-0">
-                    <div class="flex-shrink-0">
-                        <img src="https://i.imgur.com/0sQCH41.png" alt="Teknosa Logosu" class="h-10">
-                    </div>
-                    <div class="ml-4 min-w-0">
-                        <h1 class="text-2xl font-bold truncate">Teknosa.com: Sepet & Satın Alma Süreci UX Analizi</h1>
-                        <h2 class="text-sm font-semibold text-gray-500 tracking-wider">WEB / UX DEPARTMANI</h2>
-                    </div>
-                </div>
-            </div>
+    <!-- Header Alanı -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <!-- Logo -->
+            <img src="https://i.imgur.com/IEfbJTg.png" alt="Teknosa Logosu" class="h-10 w-auto">
+            
+            <!-- Başlık -->
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-800 text-right">
+                WEB/UX Departmanı <span class="block sm:inline text-gray-600 font-medium">Rapor ve Çalışmaları</span>
+            </h1>
         </div>
     </header>
-    
-    <!-- Quick Navigation -->
-    <nav class="quick-nav bg-white shadow-md sticky z-30 border-b border-[var(--border-color)]">
-        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-center h-12 space-x-4 md:space-x-8 overflow-x-auto">
-                <a href="#personas" class="text-sm font-semibold text-gray-600 hover:text-[var(--accent)] transition-colors flex-shrink-0">Personalar</a>
-                <a href="#findings" class="text-sm font-semibold text-gray-600 hover:text-[var(--accent)] transition-colors flex-shrink-0">Stratejik Özet</a>
-                <a href="#competitors" class="text-sm font-semibold text-gray-600 hover:text-[var(--accent)] transition-colors flex-shrink-0">Rakip Analizi</a>
-                <a href="#problems" class="text-sm font-semibold text-gray-600 hover:text-[var(--accent)] transition-colors flex-shrink-0">Sorun Analizi</a>
-                <a href="#matrix" class="text-sm font-semibold text-gray-600 hover:text-[var(--accent)] transition-colors flex-shrink-0">Stratejik Matris</a>
-                <a href="#conclusion" class="text-sm font-semibold text-gray-600 hover:text-[var(--accent)] transition-colors flex-shrink-0">Sonuç</a>
-            </div>
+
+    <!-- Ana İçerik Alanı -->
+    <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                UX İyileştirme Raporları
+            </h2>
+            <p class="mt-4 text-lg text-gray-600">
+                Kullanıcı deneyimini geliştirmek için yapılan analizler ve tasarım çalışmaları.
+            </p>
         </div>
-    </nav>
 
-    <!-- Main Content -->
-    <main class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-
-        <section id="personas" class="mb-28 scroll-mt-40">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-extrabold tracking-tight text-[var(--accent)] sm:text-5xl">Kullanıcı Personaları</h2>
-                <p class="mt-4 text-xl text-[var(--text-light)] max-w-3xl mx-auto">Analizlerimiz, bu üç farklı kullanıcı profilinin deneyimlerine dayanmaktadır.</p>
-            </div>
-            <div id="personas-container" class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Personas will be rendered here by JS -->
-            </div>
-        </section>
-        
-        <section id="findings" class="mb-28 scroll-mt-40">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-extrabold tracking-tight text-[var(--accent)] sm:text-5xl">Stratejik Özet ve Metodoloji</h2>
-                <p class="mt-4 text-xl text-[var(--text-light)] max-w-3xl mx-auto">Satın alma yolculuğunda tespit edilen kritik sürtünme noktaları ve bu bulguların metodolojik analizi.</p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div class="bg-white p-8 rounded-2xl shadow-lg border border-[var(--border-color)]">
-                    <h3 class="text-2xl font-bold mb-4">Bir Bakışta Rapor</h3>
-                    <div class="text-[var(--text-light)] space-y-4 text-base leading-relaxed">
-                        <p>Bu analiz, Teknosa.com'un en kritik gelir kanalı olan satın alma akışındaki kullanıcı deneyimi sürtünmelerini, 3 farklı kullanıcı personası üzerinden ortaya koymaktadır. Testler, kullanıcı yolculuğunu <strong>%17'ye varan oranda yavaşlatan</strong>, şeffaflık eksikliği nedeniyle <strong>marka güvenini zedeleyen</strong> ve ödeme anında karşılaşılan <strong>sistem hatalarıyla doğrudan gelir kaybına yol açan</strong> 4 temel problemi net bir şekilde tanımlamıştır.</p>
-                        <p>Bu rapor, söz konusu problemlerin kök nedenlerini analiz ederken, iş sonuçlarına doğrudan pozitif etki edecek, düşük eforlu ve yüksek etkili çözüm önerilerini önceliklendirmektedir.</p>
-                    </div>
-                    <div class="mt-6">
-                        <p class="text-xs text-gray-500 mb-2">Analizin tüm detaylarını, metodolojiyi ve bulguları içeren kapsamlı PDF raporuna erişmek için tıklayın.</p>
-                        <a id="pdf-link-btn" href="https://drive.google.com/file/d/1vm-QjvugbWa246fM6bi4ixLcl0RAwQzn/view?usp=sharing" target="_blank" class="inline-block bg-[var(--accent)] text-white text-sm font-bold py-3 px-6 rounded-full hover:bg-orange-600 transition-all shadow-md">
-                            Tam Raporu Görüntüle (PDF) →
-                        </a>
-                    </div>
+        <!-- Rapor Kartları -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <!-- Kart 1: Sepete Ekleme ve Satın Alma UX Raporu -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 ease-in-out group">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-900">Sepete Ekleme & Satın Alma Akışı</h3>
+                    <p class="mt-3 text-gray-600">
+                        Kullanıcının sepete ürün eklemesinden satın almayı tamamlamasına kadar olan yolculuğun detaylı analizi ve iyileştirme önerileri.
+                    </p>
                 </div>
-                <div class="bg-white p-8 rounded-2xl shadow-lg border border-[var(--border-color)]">
-                    <h3 class="text-2xl font-bold mb-2 text-center">Nielsen Değerlendirme Radarı</h3>
-                    <p class="text-center text-sm text-gray-500 mb-4">Grafik, 10 temel kullanılabilirlik ilkesindeki ihlal seviyesini gösterir. Merkezden uzaklık, problemin büyüklüğünü ifade eder.</p>
-                    <div class="chart-container">
-                        <canvas id="nielsenRadarChart"></canvas>
-                    </div>
+                <div class="p-6 bg-gray-50">
+                    <!-- ÖNEMLİ: Link burada veriliyor -->
+                    <a href="./WEB UX Analiz Raporu/index.html" 
+                       class="w-full text-center block bg-teknosa-orange text-white font-bold py-3 px-4 rounded-lg hover:bg-teknosa-orange-dark transition-colors duration-300">
+                        Rapor Sayfasını Görüntüle
+                    </a>
                 </div>
             </div>
-        </section>
 
-        <section id="quantitative-findings" class="mb-28 scroll-mt-40">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-extrabold tracking-tight text-[var(--accent)] sm:text-5xl">Kantitatif Bulgular</h2>
-                <p class="mt-4 text-xl text-[var(--text-light)] max-w-3xl mx-auto">Kullanıcı testlerinden elde edilen performans metrikleri.</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="lg:col-span-2 bg-white p-8 rounded-2xl shadow-lg border border-[var(--border-color)]">
-                   <h3 class="text-2xl font-bold mb-4 text-center">Görev Tamamlama Süreleri</h3>
-                   <div class="chart-container h-[250px] max-w-3xl">
-                           <canvas id="completionTimeChart"></canvas>
-                   </div>
-               </div>
-               <div class="lg:col-span-2 bg-white p-8 rounded-2xl shadow-lg border border-[var(--border-color)]">
-                   <h3 class="text-2xl font-bold mb-4 text-center">İşlem Başarı Oranı</h3>
-                   <div class="chart-container h-[250px] max-w-xl">
-                           <canvas id="successRateChart"></canvas>
-                   </div>
-               </div>
-               <div class="bg-white p-6 rounded-2xl shadow-lg border border-[var(--border-color)] text-center">
-                   <p class="text-4xl font-bold text-green-600">%17</p>
-                   <p class="text-sm font-semibold">Mobil Hız Avantajı</p>
-               </div>
-                <div class="bg-white p-6 rounded-2xl shadow-lg border border-[var(--border-color)] text-center">
-                   <p class="text-4xl font-bold text-red-600">4</p>
-                   <p class="text-sm font-semibold">Kritik Yavaşlama Noktası</p>
-               </div>
-               <div class="bg-white p-6 rounded-2xl shadow-lg border border-[var(--border-color)] text-center">
-                   <p class="text-4xl font-bold text-red-600">%32</p>
-                   <p class="text-sm font-semibold">Hata ile Karşılaşma Oranı</p>
-               </div>
-               <div class="bg-white p-6 rounded-2xl shadow-lg border border-[var(--border-color)] text-center">
-                   <p class="text-4xl font-bold text-orange-500">68/100</p>
-                   <p class="text-sm font-semibold">Sistem Kullanılabilirlik Skoru (SUS)</p>
-               </div>
-            </div>
-        </section>
-        
-        <section id="competitors" class="mb-28 scroll-mt-40">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-extrabold tracking-tight text-[var(--accent)] sm:text-5xl">Rakip Kıyaslama Analizi</h2>
-                <p class="mt-4 text-xl text-[var(--text-light)] max-w-3xl mx-auto">Pazardaki konumumuzu ve gelişim fırsatlarımızı anlamak için temel rakiplerin analizi.</p>
-            </div>
-            <div id="competitor-analysis-container" class="space-y-12">
-                <!-- Competitor analysis will be rendered here by JS -->
-            </div>
-        </section>
-
-        <section id="problems" class="mb-28 scroll-mt-40">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-extrabold tracking-tight text-[var(--accent)] sm:text-5xl">Detaylı Sorun Analizi</h2>
-                <p class="mt-4 text-xl text-[var(--text-light)] max-w-3xl mx-auto">Sorunları kategoriye göre filtreleyin ve detayları görmek için kartlara tıklayın.</p>
-            </div>
-            <div id="filters-container" class="flex justify-center flex-wrap gap-3 mb-8">
-                <!-- Filters will be rendered here by JS -->
-            </div>
-            <div id="problem-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <!-- Problem cards will be rendered here by JS -->
-            </div>
-        </section>
-
-        <section id="matrix" class="mb-28 scroll-mt-40">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-extrabold tracking-tight text-[var(--accent)] sm:text-5xl">Etki & Efor Matrisi</h2>
-                <p class="mt-4 text-xl text-[var(--text-light)] max-w-3xl mx-auto">"Nereden başlamalıyız?" sorusuna stratejik bir cevap.</p>
-            </div>
-            <div class="bg-white p-8 rounded-2xl shadow-lg border border-[var(--border-color)]">
-                <div class="relative grid grid-cols-2 grid-rows-2 gap-px bg-gray-200 h-96">
-                    <div class="bg-white p-4 flex flex-col justify-start items-center">
-                        <div class="text-center">
-                            <h4 class="font-bold text-lg text-green-600">Hızlı Kazanımlar</h4>
-                            <p class="text-xs text-gray-500">(Düşük Efor, Yüksek Etki)</p>
-                        </div>
-                        <div id="matrix-q1" class="flex-grow w-full flex items-center justify-center gap-4 p-4"></div>
-                    </div>
-                    <div class="bg-white p-4 flex flex-col justify-start items-center">
-                        <h4 class="font-bold text-lg text-blue-600">Büyük Projeler</h4>
-                        <p class="text-xs text-gray-500">(Yüksek Efor, Yüksek Etki)</p>
-                        <div id="matrix-q2" class="flex-grow w-full flex items-center justify-center gap-4 p-4"></div>
-                    </div>
-                    <div class="bg-white p-4 flex flex-col justify-start items-center">
-                        <h4 class="font-bold text-lg text-yellow-600">Doldurucular</h4>
-                        <p class="text-xs text-gray-500">(Düşük Efor, Düşük Etki)</p>
-                        <div id="matrix-q3" class="flex-grow w-full flex items-center justify-center gap-4 p-4"></div>
-                    </div>
-                    <div class="bg-white p-4 flex flex-col justify-start items-center">
-                        <h4 class="font-bold text-lg text-red-600">Zaman Tüketenler</h4>
-                        <p class="text-xs text-gray-500">(Yüksek Efor, Düşük Etki)</p>
-                        <div id="matrix-q4" class="flex-grow w-full flex items-center justify-center gap-4 p-4"></div>
-                    </div>
-
-                    <div class="absolute -bottom-8 left-0 right-0 text-center text-sm font-semibold text-gray-500">→ Geliştirme Eforu</div>
-                    <div class="absolute -left-12 top-0 bottom-0 flex items-center -rotate-90 text-sm font-semibold text-gray-500">→ Kullanıcı Üzerindeki Etki</div>
+            <!-- Kart 2: Ürün Detay Sayfası (PDP) UX Raporu -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 ease-in-out group">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-900">Ürün Detay Sayfası (PDP) Deneyimi</h3>
+                    <p class="mt-3 text-gray-600">
+                        Ürün detay sayfalarının kullanılabilirliği, bilgi mimarisi ve kullanıcı etkileşimini artırmaya yönelik yapılan çalışmalar.
+                    </p>
+                </div>
+                <div class="p-6 bg-gray-50">
+                    <!-- ÖNEMLİ: Link burada veriliyor -->
+                    <a href="./Web-UX PDP Analiz Raporu/index.html" 
+                       class="w-full text-center block bg-teknosa-orange text-white font-bold py-3 px-4 rounded-lg hover:bg-teknosa-orange-dark transition-colors duration-300">
+                        Rapor Sayfasını Görüntüle
+                    </a>
                 </div>
             </div>
-        </section>
-        
-        <section id="conclusion" class="scroll-mt-40">
-            <div class="bg-gradient-to-r from-[var(--text-dark)] to-slate-900 rounded-2xl p-12 text-center">
-                <h2 class="text-4xl font-extrabold text-white">Sonuç ve Stratejik Yol Haritası</h2>
-                <p class="mt-4 text-xl leading-8 text-white/80 max-w-3xl mx-auto">
-                    Analiz, kullanıcı deneyiminde yapılacak hedef odaklı iyileştirmelerin, iş sonuçlarına doğrudan pozitif etki edeceğini göstermektedir. Önerilen eylem planı:
-                </p>
-                <div class="mt-8 text-left max-w-3xl mx-auto space-y-4">
-                    <div id="recommendations-container"></div>
+            
+            <!-- Kart 3: Yeni Rapor (Örnek) -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 ease-in-out group border-2 border-dashed border-gray-300">
+                <div class="p-6 flex flex-col items-center justify-center h-full">
+                    <h3 class="text-xl font-bold text-gray-500">Yeni Rapor Eklenecek</h3>
+                    <p class="mt-3 text-gray-400 text-center">
+                        Buraya gelecekteki çalışmalarınız için yeni bir kart ekleyebilirsiniz.
+                    </p>
+                    <a href="#" 
+                       class="mt-6 w-full text-center block bg-gray-200 text-gray-500 font-bold py-3 px-4 rounded-lg cursor-not-allowed">
+                        Yakında...
+                    </a>
                 </div>
             </div>
-        </section>
 
+        </div>
     </main>
-    
+
     <!-- Footer -->
-    <footer class="bg-slate-900 text-white mt-16">
-        <div class="max-w-screen-xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-sm">
-            <p>&copy; 2025 Batuhan Karakuş | Teknosa Web UX Departmanı</p>
+    <footer class="bg-white mt-12">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
+            &copy; 2024 Teknosa İç ve Dış Ticaret A.Ş. - WEB/UX Departmanı
         </div>
     </footer>
 
-    <!-- Modal -->
-    <div id="modal-container" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 hidden modal opacity-0">
-        <div id="modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col modal-content transform scale-95">
-            <div class="p-6 flex justify-between items-center border-b border-[var(--border-color)]">
-                <h3 id="modal-title" class="text-2xl font-bold text-[var(--accent)]"></h3>
-                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-800 text-4xl font-light">&times;</button>
-            </div>
-            <div class="p-8 flex-grow overflow-y-auto" id="modal-main-content">
-            </div>
-        </div>
-    </div>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-
-        const reportData = {
-            personas: [
-                { name: 'Mustafa Bey', age: 55, category: 'Güvenlik Odaklı & Temel Düzey Kullanıcı', icon: '🛡️', description: 'Teknolojiyle arası iyi olsa da online alışverişte güvenlik ve basitliğe önem verir. Karmaşık süreçlerden ve belirsizliklerden hoşlanmaz.'},
-                { name: 'Zülal', age: 18, category: 'Mobil Odaklı & Hızlı Alışveriş Yapan Kullanıcı', icon: '📱', description: 'Alışverişlerini çoğunlukla telefonundan yapar. Hızlı, akıcı ve pratik çözümler bekler. Yavaşlık ve gereksiz adımlar onu anında soğutur.'},
-                { name: 'Kadir', age: 25, category: 'Deneyimli & Fiyat Karşılaştıran Kullanıcı', icon: '🔍', description: 'Satın almadan önce detaylı araştırma yapar, farklı siteleri karşılaştırır. Şeffaflık ve tüm bilgilere kolayca erişebilmek onun için kritiktir.'}
-            ],
-            completionTimes: {
-                labels: ['Mobil Uygulama', 'Web Sitesi'],
-                data: [95, 114]
-            },
-            heuristics: [
-                { id: 'h1', name: 'Sistem Durumunun Görünürlüğü', description: 'Sistem, uygun geri bildirimlerle kullanıcıyı makul bir süre içinde neler olup bittiği hakkında bilgilendirmelidir.' },
-                { id: 'h2', name: 'Sistem ve Gerçek Dünya Arasındaki Eşleşme', description: 'Sistem, kullanıcının aşina olduğu kelimeleri, ifadeleri ve kavramları kullanmalı, sisteme yönelik terimler yerine gerçek dünya kurallarını takip etmelidir.' },
-                { id: 'h3', name: 'Kullanıcı Kontrolü ve Özgürlüğü', description: 'Kullanıcılar genellikle yanlışlıkla işlevleri seçerler ve işaretlenmiş bir "acil çıkışa" ihtiyaç duyarlar. Geri alma ve yineleme desteği sağlanmalıdır.' },
-                { id: 'h4', name: 'Tutarlılık ve Standartlar', description: 'Kullanıcılar, farklı kelimelerin, durumların veya eylemlerin aynı anlama gelip gelmediğini merak etmek zorunda kalmamalıdır. Platform kurallarına uyun.' },
-                { id: 'h5', name: 'Hata Önleme', description: 'İyi hata mesajlarından daha iyisi, en başta sorunun oluşmasını önleyen dikkatli bir tasarımdır.' },
-                { id: 'h6', name: 'Hatırlama Yerine Tanıma', description: 'Kullanıcının hafıza yükünü en aza indirin. Nesneler, eylemler ve seçenekler görünür olmalıdır.' },
-                { id: 'h7', name: 'Esneklik ve Kullanım Verimliliği', description: 'Hızlandırıcılar (uzman kullanıcılar tarafından görülebilen) genellikle acemi kullanıcılar için süreci hızlandırabilir ve hem acemi hem de deneyimli kullanıcılara hitap edebilir.' },
-                { id: 'h8', name: 'Estetik ve Minimalist Tasarım', description: 'Diyaloglar, alakasız veya nadiren ihtiyaç duyulan bilgileri içermemelidir. Her ekstra bilgi birimi, ilgili bilgi birimleriyle rekabet eder ve bunların göreceli görünürlüğünü azaltır.' },
-                { id: 'h9', name: 'Hataları Tanıma ve Kurtarma', description: 'Hata mesajları sade bir dille ifade edilmeli, sorunu tam olarak belirtmeli ve yapıcı bir çözüm önermelidir.' },
-                { id: 'h10', name: 'Yardım ve Dokümantasyon', description: 'Sistemin dokümantasyon olmadan kullanılabilmesi daha iyi olsa da, yardım ve dokümantasyon sağlamak gerekebilir.' }
-            ],
-            nielsenScores: [9, 3, 4, 8, 5, 6, 7, 6, 5, 2],
-            taskSuccess: {
-                labels: ['Başarıyla Tamamlandı', 'Sepet Terk Edildi'],
-                data: [68, 32]
-            },
-            competitorAnalysis: {
-                features: [
-                    { key: 'guestCheckout', name: 'Misafir Alışverişi' },
-                    { key: 'shippingClarity', name: 'Kargo Şeffaflığı' },
-                    { key: 'checkoutFlow', name: 'Ödeme Akışı Verimliliği' },
-                    { key: 'paymentOptions', name: 'Ödeme Seçenekleri Çeşitliliği' }
-                ],
-                competitors: {
-                    teknosa: {
-                        name: 'Teknosa',
-                        scores: {
-                            guestCheckout: { rating: 'bad', text: 'Üyelik zorunluluğu, ilk alışveriş için bir engel teşkil ediyor.' },
-                            shippingClarity: { rating: 'bad', text: 'Kargo ücreti sadece ödeme adımında, beklenmedik maliyet yaratıyor.' },
-                            checkoutFlow: { rating: 'average', text: 'Çok adımlı süreç kullanıcıyı yavaşlatma potansiyeline sahip.' },
-                            paymentOptions: { rating: 'good', text: 'Güvenli ödeme altyapısı ve standart seçenekler mevcut.' }
-                        }
-                    },
-                    mediamarkt: {
-                        name: 'MediaMarkt',
-                        scores: {
-                            guestCheckout: { rating: 'good', text: 'Akıcı ve net bir "üye olmadan devam et" seçeneği sunuyor.' },
-                            shippingClarity: { rating: 'good', text: 'Kargo ücreti ve limiti sepette net bir şekilde belirtiliyor.' },
-                            checkoutFlow: { rating: 'good', text: 'Tek sayfa ödeme (one-page checkout) ile süreci hızlandırıyor.' },
-                            paymentOptions: { rating: 'good', text: 'Kapıda ödeme dahil çeşitli seçenekler mevcut.' }
-                        }
-                    },
-                    vatan: {
-                        name: 'Vatan Bilgisayar',
-                        scores: {
-                            guestCheckout: { rating: 'good', text: 'Misafir alışverişi seçeneği belirgin ve kolay.' },
-                            shippingClarity: { rating: 'average', text: 'Kargo bilgisi sepette mevcut ancak daha belirgin olabilir.' },
-                            checkoutFlow: { rating: 'average', text: 'Adımlar arası geçiş hızlı olsa da süreç çok adımlı.' },
-                            paymentOptions: { rating: 'average', text: 'Standart seçenekler sunuluyor, çeşitlilik orta düzeyde.' }
-                        }
-                    }
-                },
-                learnings: [
-                    {
-                        icon: '⚡',
-                        title: 'Akıcı Ödeme Deneyimi Yaratmak',
-                        text: 'Rakiplerin **tek sayfa ödeme (one-page checkout)** ve **basit misafir alışverişi** gibi uygulamaları, sepet terk oranını düşürmek için Teknosa\'nın benimseyebileceği kanıtlanmış modeller sunuyor.'
-                    },
-                    {
-                        icon: '💡',
-                        title: 'Şeffaflıkla Güveni Artırmak',
-                        text: 'Kargo ücreti gibi ek maliyetlerin **sepet adımında şeffaf bir şekilde** gösterilmesi, kullanıcı güvenini artıran ve son an iptallerini azaltan kritik bir endüstri standardı haline gelmiştir.'
-                    }
-                ]
-            },
-            recommendations: [
-                { priority: 1, title: 'Hızlı Kazanımlar', color: 'var(--accent)', items: [
-                    { text: 'Kargo ücreti bilgisini sepet adımında göstermek.', impact: 'Sepet Terk Oranını Düşürme' },
-                    { text: 'Yasal metinlerin okunabilirliğini modal pencere ile artırmak.', impact: 'Marka Güvenini Artırma' }
-                ]},
-                { priority: 2, title: 'Büyük Projeler', color: '#facc15', items: [
-                    { text: 'Ödeme anındaki sistem hataları ve yavaşlık sorunlarını gidermek.', impact: 'Doğrudan Gelir Kaybını Önleme' }
-                ]},
-                { priority: 3, title: 'İkincil İyileştirmeler', color: '#4ade80', items: [
-                    { text: 'Kayıtlı kartların yönetimini kolaylaştırmak.', impact: 'Ödeme Hızını Artırma' },
-                    { text: 'Mobil ödeme ekranındaki hiyerarşiyi düzeltmek.', impact: 'Mobil Deneyimi İyileştirme' }
-                ]}
-            ],
-            problems: [
-                { id: 'problem-1', title: 'Yasal Metinlerde Şeffaflık Eksikliği', short_desc: 'Kullanıcılar, sözleşmeleri okuyamadıkları dar ve kullanışsız bir alanda onaylamak zorunda kalıyor.', icon: '📜', categories: ['yüksek-etki', 'arayüz-sorunu'], matrix: 'q1', details: { description: 'Kullanıcılar, Ön Bilgilendirme Formu ve Mesafeli Satış Sözleşmesi\'ni okumakta zorlandıklarını belirtmiştir. Metinler, çok dar ve küçük bir pencere içinde sunulmakta, bu da kullanıcıların içeriği okumadan onaylamasına neden olmaktadır.', impact: 'Bu durum, kullanıcıları yasal haklarını bilmeden onay yapmaya zorlamakta ve markanın şeffaflık algısını ciddi şekilde zedelemektedir.', ux_principle: 'Sistem Durumunun Görünürlüğü', user_quote: 'Sözleşmeyi okumak istedim ama o kadar küçük bir alandaydı ki uğraşmadım bile. Mecburen okumadan onayladım.', image_url: 'https://i.imgur.com/Gv8JdCG.png', solution: 'Sözleşme metinlerinin gösterildiği dar kutu kaldırılmalıdır. Bunun yerine, "Mesafeli Satış Sözleşmesi" linkine tıklandığında, metnin tamamını içeren, ekranı kaplayan bir **modal (popup) pencere** açılmalıdır.' }},
-                { id: 'problem-2', title: 'Ödeme Bilgileri Yönetiminde Verimsizlik', short_desc: 'Birden fazla kayıtlı kredi kartı olan kullanıcılar, tüm kartlarını tek seferde göremiyor.', icon: '💳', categories: ['arayüz-sorunu'], matrix: 'q3', details: { description: 'Birden fazla kayıtlı kredi kartı olan kullanıcılar, tüm kartlarını tek bir ekranda göremediklerini ve dikey bir kaydırma çubuğu ile kartlar arasında gezinmek zorunda kaldıklarını belirtmiştir.', impact: 'Ödeme gibi hız ve doğruluğun kritik olduğu bir adımda, bu tasarım kullanıcıyı yavaşlatmakta, bilişsel yükünü artırmakta ve yanlış kartı seçme riskini doğurmaktadır.', ux_principle: 'Esneklik ve Kullanım Verimliliği', user_quote: 'Bir sürü kartım kayıtlı, hangisini seçeceğimi görmek için aşağı kaydırmak zorunda kaldım, çok kullanışsızdı.', image_url: 'https://i.imgur.com/ilfNb3S.png', solution: 'Kartların listelendiği alan, tüm kartları (örneğin 6-7 karta kadar) kaydırma çubuğuna ihtiyaç duymadan gösterecek şekilde genişletilmelidir. Kartlar daha kompakt bir tasarımda listelenebilir.' }},
-                { id: 'problem-3', title: 'Mobil Deneyimdeki Hiyerarşi Problemi', short_desc: 'Mobil ödeme ekranında büyük "Onayla" butonu, önemli sözleşme kutusunu gizliyor.', icon: '📱', categories: ['mobil-odaklı', 'arayüz-sorunu'], matrix: 'q3', details: { description: 'Mobil ödeme ekranının son adımında, "Onayla ve Bitir" butonu ve "Toplam Tutar" alanı o kadar büyük tasarlanmış ki, yasal olarak zorunlu olan "Sözleşme Onay" kutucuğunu ekranın dışına itiyor.', impact: 'Kullanıcı, onay kutusunu görmeden butona basma eğilimi gösteriyor. Bu durum, kaçınılmaz olarak bir hata mesajına, gereksiz bir adıma ve akışın bozulmasına neden oluyor.', ux_principle: 'Estetik ve Minimalist Tasarım, Hata Önleme', user_quote: 'Onayla butonuna bastım ama sözleşmeyi işaretlemediğim için hata verdi. Kutucuğu görmemiştim bile.', image_url: 'https://i.imgur.com/QfrM9p3.jpeg', solution: '"Onayla ve Bitir" butonu bir miktar küçültülerek veya sayfanın en altına sabitlenerek (sticky footer), sözleşme onay kutusunun her zaman görünür kalması sağlanmalıdır.' }},
-                { id: 'problem-4', title: 'Sistem Hatası ve Kargo Belirsizliği', short_desc: 'Ödeme anında sistem çöküyor ve kargo ücreti kullanıcıya çok geç gösteriliyor.', icon: '🚚', categories: ['yüksek-etki'], matrix: 'q2', details: { description: 'Kullanıcılar, ödeme anında "site yoğunluğu" gibi hatalarla karşılaşarak işlemi tamamlayamamıştır. Ayrıca kargo ücreti gibi ek maliyetler, sadece satın alma sürecinin son aşamasında ortaya çıkıyor.', impact: 'Bu iki sorun birleştiğinde, doğrudan gelir kaybına yol açar, sepet terk oranını artırır ve markaya olan güveni temelden sarsar.', ux_principle: 'Sistem Durumunun Görünürlüğü', user_quote: 'Tam ödeyecekken hem site çöktü hem de bir de kargo parası çıktı. Başta söyleselerdi ona göre karar verirdim.', image_url: 'https://i.imgur.com/daO0MZN.jpeg', solution: 'Sepet özeti bölümüne, kargo ücretini veya "ücretsiz kargo" için kalan tutarı belirten bir satır **hemen eklenmelidir**. Ayrıca ödeme altyapısının stabilitesi artırılmalıdır.' }}
-            ]
-        };
-
-        // --- RENDER FUNCTIONS ---
-
-        /**
-         * Generic chart renderer that uses ResizeObserver to prevent race conditions.
-         * @param {string} canvasId - The ID of the canvas element.
-         * @param {function} getChartConfig - A function that returns the Chart.js config object.
-         */
-        const renderChartWithObserver = (canvasId, getChartConfig) => {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) return;
-            const container = canvas.parentElement;
-            let chartInstance = null;
-
-            const observer = new ResizeObserver(entries => {
-                if (chartInstance) return;
-
-                const entry = entries[0];
-                if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
-                    const ctx = canvas.getContext('2d');
-                    chartInstance = new Chart(ctx, getChartConfig());
-                    observer.disconnect();
-                }
-            });
-            observer.observe(container);
-        };
-
-        const renderPersonas = () => {
-            const container = document.getElementById('personas-container');
-            if(!container) return;
-            container.innerHTML = '';
-            reportData.personas.forEach(persona => {
-                const card = document.createElement('div');
-                card.className = 'bg-white p-6 rounded-2xl shadow-lg border border-[var(--border-color)] text-center transition-all duration-300 hover:shadow-xl hover:-translate-y-1';
-                card.innerHTML = `
-                    <div class="text-6xl mb-4">${persona.icon}</div>
-                    <h3 class="text-xl font-bold">${persona.name}, ${persona.age}</h3>
-                    <p class="text-sm font-semibold text-[var(--accent)] mb-3">${persona.category}</p>
-                    <p class="text-[var(--text-light)] text-sm">${persona.description}</p>
-                `;
-                container.appendChild(card);
-            });
-        };
-        
-        const renderCompletionTimeChart = () => {
-            renderChartWithObserver('completionTimeChart', () => ({
-                type: 'bar',
-                data: {
-                    labels: reportData.completionTimes.labels,
-                    datasets: [{
-                        label: 'Süre (saniye)',
-                        data: reportData.completionTimes.data,
-                        backgroundColor: [ 'rgba(249, 109, 1, 0.7)', 'rgba(75, 85, 99, 0.7)' ],
-                        borderColor: [ 'var(--accent)', 'var(--text-dark)' ],
-                        borderWidth: 2,
-                        borderRadius: 4,
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { beginAtZero: true, title: { display: true, text: 'Saniye' } },
-                        y: { ticks: { font: { weight: 'bold' } } }
-                    }
-                }
-            }));
-        };
-
-        const renderSuccessRateChart = () => {
-            renderChartWithObserver('successRateChart', () => ({
-                type: 'doughnut',
-                data: {
-                    labels: reportData.taskSuccess.labels,
-                    datasets: [{
-                        label: 'Oran',
-                        data: reportData.taskSuccess.data,
-                        backgroundColor: [ 'rgba(22, 163, 74, 0.8)', 'rgba(220, 38, 38, 0.8)' ],
-                        borderColor: ['var(--white)', 'var(--white)'],
-                        borderWidth: 4,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: { position: 'bottom', labels: { font: { size: 14 } } },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.label}: %${context.raw}`;
-                                }
-                            }
-                        }
-                    }
-                }
-            }));
-        };
-
-        const renderRadarChart = () => {
-            renderChartWithObserver('nielsenRadarChart', () => ({
-                type: 'radar',
-                data: {
-                    labels: reportData.heuristics.map(h => h.name),
-                    datasets: [{
-                        label: 'İhlal Seviyesi',
-                        data: reportData.nielsenScores,
-                        backgroundColor: 'rgba(249, 109, 1, 0.25)',
-                        borderColor: 'var(--accent)',
-                        borderWidth: 2,
-                        pointBackgroundColor: 'var(--accent)',
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: 'var(--accent)',
-                        pointHoverBorderColor: 'var(--accent)', 
-                        pointRadius: 4,
-                        pointHoverRadius: 4 
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: { duration: 800, easing: 'easeInOutCubic' },
-                    events: [], 
-                    scales: {
-                        r: {
-                            angleLines: { color: 'var(--border-color)', lineWidth: 0.5 },
-                            grid: { color: 'var(--border-color)', lineWidth: 0.5 },
-                            pointLabels: { 
-                                font: { size: 12, family: 'Inter', weight: '500' }, 
-                                color: 'var(--text-light)',
-                                callback: function(label) {
-                                    if (window.innerWidth < 768 && label.length > 15) {
-                                        return label.substring(0, 14) + '...';
-                                    }
-                                    if (label.length > 25) {
-                                        const words = label.split(' ');
-                                        const halfway = Math.ceil(words.length / 2);
-                                        return [words.slice(0, halfway).join(' '), words.slice(halfway).join(' ')];
-                                    }
-                                    return label;
-                                }
-                            },
-                            suggestedMin: 0,
-                            suggestedMax: 10,
-                            ticks: { display: false, stepSize: 2 }
-                        }
-                    },
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: { enabled: false }
-                    }
-                }
-            }));
-        };
-        
-        const renderCompetitorAnalysis = () => {
-            const container = document.getElementById('competitor-analysis-container');
-            if (!container) return;
-            
-            const data = reportData.competitorAnalysis;
-            const ratingMap = {
-                good: { icon: '🟢', color: 'green' },
-                average: { icon: '🟡', color: 'yellow' },
-                bad: { icon: '🔴', color: 'red' }
-            };
-
-            let tableHtml = `
-                <div class="bg-white p-6 rounded-2xl shadow-lg border border-[var(--border-color)] overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead>
-                            <tr>
-                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Özellik</th>
-                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teknosa</th>
-                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MediaMarkt</th>
-                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vatan Bilgisayar</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-            `;
-
-            data.features.forEach(feature => {
-                tableHtml += `<tr><td class="px-4 py-4 font-bold text-sm text-gray-800">${feature.name}</td>`;
-                Object.values(data.competitors).forEach(competitor => {
-                    const score = competitor.scores[feature.key];
-                    const ratingInfo = ratingMap[score.rating];
-                    tableHtml += `
-                        <td class="px-4 py-4 text-sm text-gray-600">
-                            <div class="flex items-center">
-                               <span class="status-dot" style="background-color: ${ratingInfo.color};"></span>
-                               <span>${score.text}</span>
-                            </div>
-                        </td>
-                    `;
-                });
-                tableHtml += `</tr>`;
-            });
-
-            tableHtml += `</tbody></table></div>`;
-
-            let learningsHtml = `
-                <div class="mt-12">
-                    <h3 class="text-2xl font-bold text-center mb-6">Analizden Çıkarılan Stratejik Dersler</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            `;
-
-            data.learnings.forEach(learning => {
-                learningsHtml += `
-                    <div class="bg-white p-6 rounded-2xl shadow-lg border border-[var(--border-color)] flex items-start gap-4">
-                        <div class="text-4xl">${learning.icon}</div>
-                        <div>
-                            <h4 class="font-bold text-lg text-gray-800">${learning.title}</h4>
-                            <p class="text-sm text-gray-600 mt-1">${learning.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>
-                        </div>
-                    </div>
-                `;
-            });
-
-            learningsHtml += `</div></div>`;
-
-            container.innerHTML = tableHtml + learningsHtml;
-        };
-
-        const renderFiltersAndProblems = () => {
-            const filtersContainer = document.getElementById('filters-container');
-            const problemCardsContainer = document.getElementById('problem-cards');
-            if(!filtersContainer || !problemCardsContainer) return;
-            
-            const filters = ['tümü', 'yüksek-etki', 'arayüz-sorunu', 'mobil-odaklı'];
-            const filterLabels = {'tümü': 'Tümü', 'yüksek-etki': 'Yüksek Etki', 'arayüz-sorunu': 'Arayüz Sorunu', 'mobil-odaklı': 'Mobil Odaklı'};
-
-            filters.forEach(filter => {
-                const button = document.createElement('button');
-                button.className = 'filter-btn px-4 py-2 text-sm font-semibold rounded-full bg-white border border-[var(--border-color)] shadow-sm text-[var(--text-light)] hover:border-[var(--accent)] transition-all';
-                button.dataset.filter = filter;
-                button.textContent = filterLabels[filter];
-                if (filter === 'tümü') button.classList.add('active');
-                filtersContainer.appendChild(button);
-            });
-
-            const renderProblems = (filter = 'tümü') => {
-                problemCardsContainer.innerHTML = '';
-                const filteredProblems = filter === 'tümü' 
-                    ? reportData.problems 
-                    : reportData.problems.filter(p => p.categories.includes(filter));
-
-                filteredProblems.forEach(problem => {
-                    const card = document.createElement('div');
-                    card.className = 'bg-white p-6 rounded-2xl shadow-lg border border-[var(--border-color)] hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col text-center items-center group';
-                    card.dataset.problemId = problem.id;
-                    card.innerHTML = `
-                        <div class="text-6xl mb-4">${problem.icon}</div>
-                        <h3 class="text-lg font-bold mb-2 h-14 flex items-center justify-center">${problem.title}</h3>
-                        <p class="text-[var(--text-light)] text-sm flex-grow mb-4">${problem.short_desc}</p>
-                        <span class="mt-auto bg-[var(--accent)] text-white text-sm font-bold py-2 px-4 rounded-full flex items-center gap-2">Detayları Gör <span class="transition-transform group-hover:translate-x-1">→</span></span>
-                    `;
-                    problemCardsContainer.appendChild(card);
-                });
-            };
-
-            filtersContainer.addEventListener('click', e => {
-                if (e.target.matches('.filter-btn')) {
-                    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
-                    renderProblems(e.target.dataset.filter);
-                }
-            });
-            renderProblems();
-        };
-
-        const renderMatrix = () => {
-            reportData.problems.forEach(problem => {
-                const quadrant = document.getElementById(`matrix-${problem.matrix}`);
-                if(quadrant) {
-                    const point = document.createElement('div');
-                    point.className = 'matrix-point group relative cursor-pointer flex items-center justify-center bg-white border-2 rounded-full w-12 h-12 shadow-lg';
-                    point.style.borderColor = problem.categories.includes('yüksek-etki') ? 'var(--accent)' : 'var(--border-color)';
-                    point.innerHTML = `<span class="text-2xl">${problem.icon}</span><div class="absolute bottom-full mb-2 w-48 bg-[var(--text-dark)] text-white text-xs rounded py-1 px-2 text-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">${problem.title}</div>`;
-                    quadrant.appendChild(point);
-                }
-            });
-        };
-        
-        const renderRecommendations = () => {
-            const container = document.getElementById('recommendations-container');
-            if(!container) return;
-            container.innerHTML = '';
-            reportData.recommendations.forEach(rec => {
-                const div = document.createElement('div');
-                div.className = 'bg-white/10 p-4 rounded-lg';
-                let itemsHtml = '';
-                rec.items.forEach(item => {
-                    itemsHtml += `<li class="flex justify-between items-center gap-4"><span>${item.text}</span><span class="flex-shrink-0 text-xs font-semibold bg-white/20 text-white rounded-full px-2 py-0.5">${item.impact}</span></li>`;
-                });
-                div.innerHTML = `
-                    <p class="font-bold" style="color: ${rec.color};">${rec.priority}. Öncelik (${rec.title}):</p>
-                    <ul class="list-disc list-inside text-white/90 mt-2 space-y-2">${itemsHtml}</ul>
-                `;
-                container.appendChild(div);
-            });
-        };
-        
-        const getMockupHtml = (problemId) => {
-            const problem = reportData.problems.find(p => p.id === problemId);
-            if (!problem) return '';
-            const wrapper = (content) => `<div class="w-full h-full flex flex-col items-center justify-center bg-slate-100 p-4 rounded-md border-2 border-dashed border-slate-300">${content}</div>`;
-            switch(problemId) {
-                case 'problem-1':
-                    return wrapper(`
-                        <div class="w-4/5 h-4/5 bg-white rounded-lg shadow-xl p-4 flex flex-col relative">
-                          <div class="absolute -top-8 left-0 text-xs text-slate-500">← Tıklanabilir Link</div>
-                          <div class="absolute top-4 -right-12 text-xs text-slate-500">Kapatma Butonu →</div>
-                          <div class="flex justify-between items-center mb-2 pb-2 border-b">
-                            <h3 class="text-sm font-bold">Mesafeli Satış Sözleşmesi</h3>
-                            <span class="text-gray-400 text-lg">&times;</span>
-                          </div>
-                          <div class="text-xs text-gray-500 overflow-y-auto space-y-1 flex-grow relative">
-                            <p class="absolute -left-12 top-1/2 -translate-y-1/2 text-xs text-slate-500">Kaydırılabilir Alan →</p>
-                            <p>Madde 1: Taraflar...</p>
-                            <div class="bg-slate-200 h-2 w-full rounded"></div><div class="bg-slate-200 h-2 w-3/4 rounded"></div><div class="bg-slate-200 h-2 w-full rounded"></div>
-                          </div>
-                        </div>
-                        <p class="text-xs font-semibold mt-4 text-blue-600">ÖNERİ: Geniş, okunabilir popup pencere</p>
-                    `);
-                case 'problem-2':
-                     return wrapper(`
-                        <div class="w-full p-4 flex gap-4 items-center">
-                            <div class="w-1/2 p-2 border rounded-md text-center text-xs text-red-500">ÖNCE<br>(Kaydırma Gerekli)</div>
-                            <div class="text-2xl font-bold text-slate-400">→</div>
-                            <div class="w-1/2 p-2 border-2 border-green-500 rounded-md text-center text-xs text-green-600">SONRA<br>(Tümü Görünür)</div>
-                        </div>
-                        <div class="w-full p-4 space-y-2">
-                            <h3 class="text-sm font-bold mb-2">Kart Bilgileriniz</h3>
-                            <div class="bg-white p-2 rounded-lg border-2 border-orange-500 flex items-center gap-2"><div class="w-4 h-3 bg-red-500 rounded-sm"></div><span class="text-xs">Benim Kartım **** 29</span></div>
-                            <div class="bg-white p-2 rounded-lg border flex items-center gap-2"><div class="w-4 h-3 bg-red-500 rounded-sm"></div><span class="text-xs">kyk kredi kartı **** 00</span></div>
-                            <div class="bg-white p-2 rounded-lg border flex items-center gap-2"><div class="w-4 h-3 bg-red-500 rounded-sm"></div><span class="text-xs">Vakkas Karakuş **** 18</span></div>
-                        </div>
-                        <p class="text-xs font-semibold mt-2 text-blue-600">ÖNERİ: Tüm kartları gösteren, kaydırmasız liste</p>
-                     `);
-                case 'problem-3':
-                    return wrapper(`
-                        <div class="w-1/2 h-5/6 bg-white rounded-2xl shadow-xl p-2 flex flex-col relative">
-                            <div class="flex-grow p-2 text-xs space-y-2">
-                                <div class="bg-slate-200 h-4 w-full rounded"></div><div class="bg-slate-200 h-4 w-3/4 rounded"></div>
-                            </div>
-                            <div class="p-2 border-t mt-auto">
-                                <div class="flex items-center gap-2 mb-2"><input type="checkbox" checked class="accent-orange-500"/><span class="text-xs">Sözleşmeyi okudum, kabul ediyorum.</span></div>
-                                <div class="bg-orange-500 text-white text-center text-sm py-2 rounded-lg">Onayla ve Bitir</div>
-                            </div>
-                             <p class="absolute -bottom-6 text-xs font-semibold mt-2 text-blue-600">ÖNERİ: Buton alta sabitlenir</p>
-                        </div>
-                    `);
-                case 'problem-4':
-                     return wrapper(`
-                        <div class="w-full h-full p-4 bg-white rounded-lg shadow-xl">
-                            <h3 class="text-sm font-bold">Sepetim</h3>
-                            <div class="mt-2 p-2 border-b"><p class="text-xs">Ürün 1...</p></div>
-                            <div class="p-2 border-b"><p class="text-xs">Ürün 2...</p></div>
-                            <div class="mt-4 p-2 bg-green-100 border-l-4 border-green-500 rounded-r-lg">
-                                <p class="text-xs font-bold text-green-800">Kargo Ücreti: 19.99 TL</p>
-                            </div>
-                            <p class="text-xs font-semibold mt-4 text-blue-600">ÖNERİ: Kargo ücreti sepette net olarak belirtilir</p>
-                        </div>
-                    `);
-                default:
-                    return `<img src="${problem.details.image_url}" class="w-full h-full object-contain" onerror="this.onerror=null;this.src='https://placehold.co/600x400/f8fafc/cbd5e1?text=G%C3%B6rsel+Y%C3%BCklenemedi';">`;
-            }
-        }
-
-        // --- MODAL LOGIC ---
-        const modalContainer = document.getElementById('modal-container');
-        const modalContent = document.getElementById('modal-content');
-        const modalTitle = document.getElementById('modal-title');
-        const modalMainContent = document.getElementById('modal-main-content');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-
-        const openModal = () => {
-            modalContainer.classList.remove('hidden');
-            setTimeout(() => {
-                modalContainer.classList.remove('opacity-0');
-                modalContent.classList.remove('scale-95');
-            }, 10);
-        };
-
-        const closeModal = () => {
-            modalContainer.classList.add('opacity-0');
-            modalContent.classList.add('scale-95');
-            setTimeout(() => {
-                modalContainer.classList.add('hidden');
-            }, 250);
-        };
-
-        closeModalBtn.addEventListener('click', closeModal);
-        modalContainer.addEventListener('click', (e) => {
-            if (e.target === modalContainer) closeModal();
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !modalContainer.classList.contains('hidden')) closeModal();
-        });
-
-        const openProblemModal = (problemId) => {
-            const problem = reportData.problems.find(p => p.id === problemId);
-            if (!problem) return;
-            modalTitle.textContent = problem.title;
-            modalMainContent.innerHTML = `
-                <div id="modal-body" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="prose max-w-none text-[var(--text-light)]" id="modal-text-content">
-                        <h4 class="font-bold text-lg">Sorun Analizi</h4>
-                        <p>${problem.details.description}</p>
-                        <h4 class="font-bold text-lg mt-4">Kullanıcı Üzerindeki Etkisi</h4>
-                        <p>${problem.details.impact}</p>
-                        <blockquote class="border-l-4 border-[var(--accent)] bg-slate-50 p-4 my-4">
-                            <p class="font-semibold italic">Kullanıcı Yorumu: "${problem.details.user_quote}"</p>
-                        </blockquote>
-                        <h4 class="font-bold text-lg mt-4">İlgili UX İlkesi</h4>
-                        <p class="font-medium text-[var(--accent)]">${problem.details.ux_principle}</p>
-                        <h4 class="font-bold text-lg mt-6">Çözüm Önerisi</h4>
-                        <div class="bg-green-100 border-l-4 border-green-500 p-4 rounded-r-lg text-green-900">${problem.details.solution.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>
-                    </div>
-                    <div id="modal-image-container">
-                        <div class="flex border-b border-gray-200 mb-4">
-                            <button data-tab="before" class="modal-tab-btn flex-1 py-2 text-sm font-semibold border-b-2 border-transparent">Mevcut Durum (Sorun)</button>
-                            <button data-tab="after" class="modal-tab-btn flex-1 py-2 text-sm font-semibold border-b-2 border-transparent">Önerilen Çözüm (Blueprint)</button>
-                        </div>
-                        <div id="modal-image-wrapper" class="rounded-lg shadow-inner w-full border border-[var(--border-color)] bg-slate-50 min-h-[400px]"></div>
-                    </div>
-                </div>
-            `;
-            
-            const updateModalTab = (tab) => {
-                document.querySelectorAll('.modal-tab-btn').forEach(btn => {
-                    btn.classList.remove('active', 'text-[var(--accent)]', 'border-[var(--accent)]');
-                    btn.classList.add('text-gray-500', 'border-transparent');
-                });
-                const activeBtn = document.querySelector(`.modal-tab-btn[data-tab="${tab}"]`);
-                if (activeBtn) {
-                    activeBtn.classList.add('active', 'text-[var(--accent)]', 'border-[var(--accent)]');
-                    activeBtn.classList.remove('text-gray-500', 'border-transparent');
-                }
-                
-                const imageWrapper = document.getElementById('modal-image-wrapper');
-                if (imageWrapper) {
-                    if (tab === 'before') {
-                        imageWrapper.innerHTML = `<img src="${problem.details.image_url}" class="w-full h-full object-contain p-4" onerror="this.onerror=null;this.src='https://placehold.co/600x400/f8fafc/cbd5e1?text=G%C3%B6rsel+Y%C3%BCklenemedi';">`;
-                    } else {
-                        imageWrapper.innerHTML = getMockupHtml(problem.id);
-                    }
-                }
-            };
-            
-            document.querySelectorAll('.modal-tab-btn').forEach(btn => btn.addEventListener('click', () => updateModalTab(btn.dataset.tab)));
-            updateModalTab('before');
-            
-            openModal();
-        };
-        
-        document.getElementById('problem-cards').addEventListener('click', (e) => {
-            const card = e.target.closest('[data-problem-id]');
-            if (card) openProblemModal(card.dataset.problemId);
-        });
-        
-        // --- INITIAL RENDER ---
-        renderPersonas();
-        renderCompletionTimeChart();
-        renderSuccessRateChart();
-        renderRadarChart();
-        renderCompetitorAnalysis();
-        renderFiltersAndProblems();
-        renderMatrix();
-        renderRecommendations();
-    });
-    </script>
 </body>
 </html>
